@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Menú Principal | MC Terminals</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #0e0e2c;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+    }
+   
+    .card {
+      position: relative;
+      background: #1b1b3a;
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #3f3f91;
+      margin-top: 120px;
+    }
+    .btn-futuristic {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(to right, #4b6cb7, #182848);
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      transition: all 0.3s ease;
+      font-size: 16px;
+    }
+    .btn-futuristic:hover {
+      background: linear-gradient(to right, #3a8dde, #1e3c72);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
+    }
+    .btn-logout {
+      background-color: #d9534f;
+      border-radius: 50px;
+    }
+    .btn-logout:hover {
+      background-color: #c9302c;
+    }
+    .titulo-rol {
+      color: #ffffff;
+      font-size: 1.2rem;
+    }
+    .titulo-principal {
+      color: #ffffff;
+      font-size: 1.8rem;
+    }
+.logo-superior {
+  position: absolute;
+  top: -15px;
+  right: 40px;
+}
+
+.logo-img {
+  width: 135px;
+  height: auto;
+}
+
+  </style>
+</head>
+<body>
+  
+
+  <div class="container mt-5">
+    <div class="card shadow text-center p-4">
+      <div class="logo-superior">
+  <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" alt="Logo MC" class="logo-img">
+</div>
+      <h3 class="mb-3 titulo-principal">Bienvenido <span id="nombreUsuario"></span></h3>
+      <h5 class="mb-4 titulo-rol" id="rolUsuario"></h5>
+      <div id="opciones" class="d-grid gap-3"></div>
+      <button class="btn btn-danger btn-logout mt-4 w-100" onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <script>
+    const rol = localStorage.getItem("rol");
+    const nombre = localStorage.getItem("nombre") || "Usuario";
+    const opciones = document.getElementById("opciones");
+
+    document.getElementById("nombreUsuario").textContent = nombre;
+    document.getElementById("rolUsuario").textContent = `Rol: ${rol}`;
+
+    const menuOpciones = {
+      ube_admin: ["Crear usuario", "Ver usuarios", "Ver estatus", "Ver órdenes", "Cambiar estatus", "Crear orden"],
+      admin: ["Ver usuarios", "Ver órdenes", "Cambiar estatus", "Ver estatus"],
+      bascula: ["Ver órdenes", "Cambiar estatus"],
+      cliente: ["Crear orden", "Ver estatus"],
+      consignatario: ["Crear orden", "Ver estatus"]
+    };
+
+    if (!rol || !menuOpciones[rol]) {
+      opciones.innerHTML = "<div class='alert alert-danger'>Rol no reconocido.</div>";
+    } else {
+      menuOpciones[rol].forEach(op => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-futuristic";
+        btn.textContent = op;
+
+        // Redirigir según la opción
+        btn.onclick = () => {
+          switch(op) {
+            case "Crear usuario":
+              window.location.href = "registro.html";
+              break;
+            case "Ver usuarios":
+              window.location.href = "ver_usuarios.html";
+              break;
+            case "Ver órdenes":
+              window.location.href = "ver_ordenes.html";
+              break;
+            case "Cambiar estatus":
+              window.location.href = "cambiar_estatus.html";
+              break;
+            case "Crear orden":
+              window.location.href = "crear_orden.html";
+              break;
+            case "Eliminar orden":
+              window.location.href = "eliminar_orden.html";
+              break;
+            case "Editar orden":
+              window.location.href = "editar_orden.html";
+              break;
+            case "Ver estatus":
+              window.location.href = "ver_estatus.html";
+              break;
+            default:
+              alert("Página no disponible");
+          }
+        };
+
+        opciones.appendChild(btn);
+      });
+    }
+
+    function cerrarSesion() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
