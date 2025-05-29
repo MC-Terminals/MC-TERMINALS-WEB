@@ -55,67 +55,72 @@
       }
     }
 
-  .logo-img {
-  height: 45px;
+.logo-img {
+  height: 60px;
 }
 
 @media (max-width: 768px) {
-  .navbar-brand {
-    padding: 0;
-    margin-right: auto;
-  }
-
   .logo-img {
-    height: 40px;
+    height: 45px;
   }
 
   .navbar-text {
-    text-align: right;
     font-size: 0.85rem;
+    text-align: center;
+    display: block;
+    width: 100%;
+    margin-top: 5px;
   }
 
   .main-title {
-    margin-top: 10px;
     font-size: 1.3rem;
-    text-align: center;
+    margin-top: 20px;
+  }
+
+  .navbar-toggler {
+    margin-left: auto;
   }
 }
-
-
 
   </style>
 </head>
 <body>
  <nav class="navbar navbar-expand-lg navbar-dark">
-  <div class="container-fluid px-4">
-    <!-- LOGO -->
+ <div class="container-fluid px-4">
+  <div class="d-flex w-100 justify-content-between align-items-center">
+    <!-- Logo a la izquierda -->
     <a class="navbar-brand d-flex align-items-center" href="#">
       <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png"
-           alt="MC Terminals" class="logo-img me-2">
+           alt="MC Terminals" class="logo-img">
     </a>
 
-      <!-- TEXTO USUARIO -->
-    <span class="navbar-text text-white ms-auto me-3" id="usuarioInfo"></span>
-    <!-- BOTÓN HAMBURGUESA -->
+    <!-- Nombre del usuario centrado -->
+    <div class="text-center flex-grow-1">
+      <span class="navbar-text text-white" id="usuarioInfo"></span>
+    </div>
+
+    <!-- Botón hamburguesa a la derecha -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarNav" aria-controls="navbarNav"
             aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-
-    <!-- MENÚ COLAPSABLE -->
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="registro.html">Crear usuario</a></li>
-        <li class="nav-item"><a class="nav-link" href="ver_usuarios.html">Ver usuarios</a></li>
-        <li class="nav-item"><a class="nav-link" href="ver_estatus.html">Ver estatus</a></li>
-        <li class="nav-item"><a class="nav-link" href="ver_ordenes.html">Ver órdenes</a></li>
-        <li class="nav-item"><a class="nav-link" href="cambiar_estatus.html">Cambiar estatus</a></li>
-        <li class="nav-item"><a class="nav-link" href="crear_orden.html">Crear orden</a></li>
-        <li class="nav-item"><a class="nav-link" href="login.html" onclick="cerrarSesion()">Cerrar sesión</a></li>
-      </ul>
-    </div>
   </div>
+
+  <!-- Menú de navegación -->
+  <div class="collapse navbar-collapse justify-content-end mt-2" id="navbarNav">
+    <ul class="navbar-nav w-100 justify-content-end">
+      <li class="nav-item"><a class="nav-link" href="registro.html">Crear usuario</a></li>
+      <li class="nav-item"><a class="nav-link" href="ver_usuarios.html">Ver usuarios</a></li>
+      <li class="nav-item"><a class="nav-link" href="ver_estatus.html">Ver estatus</a></li>
+      <li class="nav-item"><a class="nav-link" href="ver_ordenes.html">Ver órdenes</a></li>
+      <li class="nav-item"><a class="nav-link" href="cambiar_estatus.html">Cambiar estatus</a></li>
+      <li class="nav-item"><a class="nav-link" href="crear_orden.html">Crear orden</a></li>
+      <li class="nav-item"><a class="nav-link" href="login.html" onclick="cerrarSesion()">Cerrar sesión</a></li>
+    </ul>
+  </div>
+</div>
+
 </nav>
 
 
