@@ -55,70 +55,70 @@
       }
     }
 
-   @media (max-width: 768px) {
-  .navbar-collapse {
-    text-align: center;
-  }
+  .logo-img {
+  height: 45px;
+}
 
-  .main-title {
-    margin-top: 20px;
-    font-size: 1.5rem;
+@media (max-width: 768px) {
+  .navbar-brand {
+    padding: 0;
+    margin-right: auto;
   }
 
   .logo-img {
-    height: 45px;
-  }
-
-  .navbar-brand {
-    display: flex;
-    align-items: center;
-    padding: 0;
+    height: 40px;
   }
 
   .navbar-text {
-    display: block;
-    text-align: center;
+    text-align: right;
+    font-size: 0.85rem;
+  }
+
+  .main-title {
     margin-top: 10px;
-    font-size: 0.9rem;
-  }
-
-  .container-fluid {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .row-cols-md-5 > * {
-    flex: 0 0 100%;
-    max-width: 100%;
+    font-size: 1.3rem;
+    text-align: center;
   }
 }
+
 
 
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid px-4">
-      <a class="navbar-brand" href="#">
-        <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" alt="MC Terminals" class="logo-img">
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <span class="navbar-text text-white ms-auto me-3" id="usuarioInfo"></span>
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link" href="registro.html">Crear usuario</a></li>
-          <li class="nav-item"><a class="nav-link" href="ver_usuarios.html">Ver usuarios</a></li>
-          <li class="nav-item"><a class="nav-link" href="ver_estatus.html">Ver estatus</a></li>
-          <li class="nav-item"><a class="nav-link" href="ver_ordenes.html">Ver órdenes</a></li>
-          <li class="nav-item"><a class="nav-link" href="cambiar_estatus.html">Cambiar estatus</a></li>
-          <li class="nav-item"><a class="nav-link" href="crear_orden.html">Crear orden</a></li>
-          <li class="nav-item"><a class="nav-link" href="login.html" onclick="cerrarSesion()">Cerrar sesión</a></li>
-        </ul>
-      </div>
+ <nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid px-4">
+    <!-- LOGO -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png"
+           alt="MC Terminals" class="logo-img me-2">
+    </a>
+
+    <!-- BOTÓN HAMBURGUESA -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarNav" aria-controls="navbarNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- TEXTO USUARIO -->
+    <span class="navbar-text text-white ms-auto me-3" id="usuarioInfo"></span>
+
+    <!-- MENÚ COLAPSABLE -->
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="registro.html">Crear usuario</a></li>
+        <li class="nav-item"><a class="nav-link" href="ver_usuarios.html">Ver usuarios</a></li>
+        <li class="nav-item"><a class="nav-link" href="ver_estatus.html">Ver estatus</a></li>
+        <li class="nav-item"><a class="nav-link" href="ver_ordenes.html">Ver órdenes</a></li>
+        <li class="nav-item"><a class="nav-link" href="cambiar_estatus.html">Cambiar estatus</a></li>
+        <li class="nav-item"><a class="nav-link" href="crear_orden.html">Crear orden</a></li>
+        <li class="nav-item"><a class="nav-link" href="login.html" onclick="cerrarSesion()">Cerrar sesión</a></li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <h2 class="main-title">Proceso de Carga en MC Terminals</h2>
 
