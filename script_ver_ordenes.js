@@ -175,10 +175,11 @@ function exportarExcel() {
   const wb = XLSX.utils.book_new();
   const ws_data = [
     [
-      "No. Orden", "Fecha", "Buque", "BL", "Placa", "Piloto", "Producto", "Bodega",
-      "Cant. (qq)", "Cant. (ton)", "Estatus",
-      "Fecha Generada", "Fecha Registrada", "Fecha Peso Inicial", "Fecha Finalizada", "Boleta"
-    ]
+  "No. Orden", "Fecha", "Buque", "BL", "Empresa", "Placa", "Piloto", "Producto", "Bodega",
+  "Cant. (qq)", "Cant. (ton)", "Estatus",
+  "Fecha Generada", "Fecha Registrada", "Fecha Peso Inicial", "Fecha Finalizada", "Boleta"
+]
+
   ];
 
   ordenes.filter(o => {
@@ -194,23 +195,24 @@ function exportarExcel() {
     );
   }).forEach(o => {
     ws_data.push([
-      o.no_orden,
-      new Date(o.fecha_generada).toLocaleString(),
-      o.buque,
-      o.bl,
-      o.placa,
-      o.piloto,
-      o.producto,
-      o.bodega,
-      o.cantidad_qq,
-      o.cantidad_ton.toFixed(2),
-      o.estatus,
-      o.fecha_generada ? new Date(o.fecha_generada).toLocaleString() : "",
-      o.fecha_registrada ? new Date(o.fecha_registrada).toLocaleString() : "",
-      o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial).toLocaleString() : "",
-      o.fecha_finalizada ? new Date(o.fecha_finalizada).toLocaleString() : "",
-      o.boleta_final || ""
-    ]);
+  o.no_orden,
+  new Date(o.fecha_generada).toLocaleString(),
+  o.buque,
+  o.bl,
+  empresasPorNit[o.nit_usuario] || "Desconocida",
+  o.placa,
+  o.piloto,
+  o.producto,
+  o.bodega,
+  o.cantidad_qq,
+  o.cantidad_ton.toFixed(2),
+  o.estatus,
+  o.fecha_generada ? new Date(o.fecha_generada).toLocaleString() : "",
+  o.fecha_registrada ? new Date(o.fecha_registrada).toLocaleString() : "",
+  o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial).toLocaleString() : "",
+  o.fecha_finalizada ? new Date(o.fecha_finalizada).toLocaleString() : "",
+  o.boleta_final || ""
+]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
