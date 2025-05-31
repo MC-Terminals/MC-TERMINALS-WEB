@@ -30,7 +30,7 @@ if (password !== user.contraseña) {
   mensaje.innerText = "Contraseña incorrecta";
 } else {
   mensaje.style.color = "green";
-  mensaje.innerText = `¡Bienvenido, ${user.nombre}!`;
+  mensaje.innerText = `¡Bienvenido, ${user.empresa}!`;
 
   localStorage.setItem("nit", user.nit);
   localStorage.setItem("rol", user.rol);
