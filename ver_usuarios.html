@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Usuarios | MC Terminals</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+ <style>
+  body {
+    background: #0e0e2c;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .card {
+    position: relative;
+    background: #1b1b3a;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 0 20px #3f3f91;
+    padding: 20px;
+  }
+
+  .btn-action {
+    font-size: 0.9rem;
+    margin: 2px;
+  }
+
+  .form-control, .form-select {
+    background-color: #2c2c4a;
+    color: white;
+    border: none;
+  }
+
+  .form-control::placeholder {
+    color: #bbb;
+  }
+
+  .form-label {
+    color: white;
+  }
+
+  .table {
+    color: white;
+  }
+
+  .logo-superior {
+    text-align: end;
+    margin-bottom: 10px;
+  }
+
+  .logo-img {
+    width: 80px;
+    height: auto;
+  }
+
+  @media (max-width: 768px) {
+   .logo-superior {
+      position: absolute;
+      top: 20px;
+      right: 10px;
+    }
+
+    .logo-img {
+      width: 60px;
+    }
+
+    h2.text-white {
+      text-align: center;
+      font-size: 1.4rem;
+    }
+
+    .row.mb-3 .col-md-6 {
+      margin-bottom: 15px;
+    }
+
+    .btn-action {
+      display: block;
+      width: 100%;
+      margin: 3px 0;
+    }
+  }
+</style>
+
+</head>
+<body>
+<div class="container mt-4">
+  <div class="card">
+    <div class="logo-superior">
+      <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" class="logo-img" alt="Logo MC">
+    </div>
+    <h2 class="text-white">Gestión de Usuarios</h2>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Buscar por NIT:</label>
+        <input type="text" id="filtroNIT" class="form-control" placeholder="Ingrese NIT">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Buscar por Empresa:</label>
+        <input type="text" id="filtroEmpresa" class="form-control" placeholder="Ingrese Empresa">
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>NIT</th>
+            <th>Empresa</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaUsuarios"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalRol" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Asignar nuevo rol</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <select id="nuevoRol" class="form-select">
+          <option value="">Seleccione un rol</option>
+          <option value="admin">Administrador</option>
+          <option value="bascula">Báscula</option>
+          <option value="cheque">Cheque</option>
+          <option value="consignatario">Consignatario</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="confirmarRol">Asignar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="text-center mt-4">
+  <button class="btn btn-outline-light" onclick="window.location.href='menu.html'">Regresar al Menú</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase = window.supabase.createClient(
+  'https://fpqnzqrdyxmhptosplos.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c'
+);
+
+let usuarios = [];
+let usuarioActual = null;
+const tabla = document.getElementById("tablaUsuarios");
+const modalRol = new bootstrap.Modal(document.getElementById("modalRol"));
+const nuevoRol = document.getElementById("nuevoRol");
+
+async function compartirUsuario(nit) {
+  const usuario = usuarios.find(u => u.nit === nit);
+  if (!usuario) {
+    alert("Usuario no encontrado.");
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("contraseña")
+    .eq("nit", nit)
+    .single();
+
+  if (error || !data) {
+    alert("No se pudo obtener la contraseña del usuario.");
+    return;
+  }
+
+  const asunto = encodeURIComponent("Usuario de órdenes de carga | MC Terminals");
+  const cuerpo = encodeURIComponent(
+`Bienvenido/a al sistema de órdenes de carga de MC Terminals.
+
+🔐 Usuario (NIT): ${usuario.nit}
+🔑 Contraseña: ${data.contraseña}
+
+Con este acceso podrás:
+
+📦 Generar órdenes de carga
+📊 Consultar estados y turnos
+📁 Descargar reportes y más
+
+Accede desde cualquier navegador aquí:
+🌐 https://darwinubeda51.github.io/MC-TERMINALS-WEB/login.html
+
+Gracias por usar nuestros servicios.
+-- Equipo MC Terminals`
+  );
+
+  window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+}
+
+
+async function cargarUsuarios() {
+  const { data, error } = await supabase.from("usuarios").select("nit, empresa, rol");
+  if (error) {
+    console.error("Error al cargar usuarios", error);
+    alert("No se pudieron cargar los usuarios.");
+    return;
+  }
+  usuarios = data || [];
+  mostrarUsuarios();
+}
+
+function mostrarUsuarios() {
+  const nit = document.getElementById("filtroNIT").value.toLowerCase();
+  const empresa = document.getElementById("filtroEmpresa").value.toLowerCase();
+  tabla.innerHTML = "";
+
+  usuarios.filter(u =>
+    u.nit.toLowerCase().includes(nit) &&
+    u.empresa.toLowerCase().includes(empresa)
+  ).forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+  <td>${u.nit}</td>
+  <td>${u.empresa}</td>
+  <td>${u.rol}</td>
+  <td>
+    <button class="btn btn-sm btn-warning btn-action" onclick="abrirModalRol('${u.nit}')">Asignar Rol</button>
+    <button class="btn btn-sm btn-danger btn-action" onclick="eliminarUsuario('${u.nit}')">Eliminar</button>
+    <button class="btn btn-sm btn-info btn-action" onclick="cambiarContrasena('${u.nit}')">Cambiar Contraseña</button>
+    <button class="btn btn-sm btn-primary btn-action" onclick="compartirUsuario('${u.nit}')">Compartir</button>
+  </td>
+`;
+    tabla.appendChild(tr);
+  });
+}
+
+
+function abrirModalRol(nit) {
+  usuarioActual = nit;
+  nuevoRol.value = "";
+  modalRol.show();
+}
+
+document.getElementById("confirmarRol").addEventListener("click", async () => {
+  if (nuevoRol.value && usuarioActual) {
+    const { error } = await supabase
+      .from("usuarios")
+      .update({ rol: nuevoRol.value })
+      .eq("nit", usuarioActual.toString());
+
+    if (error) {
+      console.error("Error al asignar rol:", error);
+      alert("No se pudo asignar el rol.");
+    } else {
+      modalRol.hide();
+      alert("Rol asignado correctamente.");
+      cargarUsuarios();
+    }
+  }
+});
+
+async function eliminarUsuario(nit) {
+  const confirmar = confirm(`¿Estás seguro de eliminar al usuario con NIT ${nit}?`);
+  if (!confirmar) return;
+
+  const { error } = await supabase.from("usuarios").delete().eq("nit", nit.toString());
+  if (error) {
+    console.error("Error al eliminar usuario:", error);
+    alert("No se pudo eliminar el usuario.");
+  } else {
+    alert("Usuario eliminado correctamente.");
+    cargarUsuarios();
+  }
+}
+
+async function cambiarContrasena(nit) {
+  const nueva = prompt("Ingrese la nueva contraseña (mínimo 4 y máximo 15 caracteres):");
+  if (!nueva || nueva.length < 4 || nueva.length > 15) {
+    alert("Debe ingresar entre 4 y 15 caracteres.");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("usuarios")
+    .update({ contraseña: nueva })
+    .eq("nit", nit.toString());
+
+  if (error) {
+    console.error("Error al cambiar contraseña:", error);
+    alert("No se pudo cambiar la contraseña.");
+  } else {
+    alert("Contraseña actualizada correctamente.");
+    cargarUsuarios();
+  }
+}
+
+document.querySelectorAll("#filtroNIT, #filtroEmpresa ").forEach(input => {
+  input.addEventListener("input", mostrarUsuarios);
+});
+
+cargarUsuarios();
+</script>
+  
+ 
+
+  <script>
+    // Seguridad: sesión obligatoria
+    if (!localStorage.getItem("nit")) {
+      window.location.replace("login.html");
+    }
+
+    // Bloqueo de retroceso
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+      history.pushState(null, null, location.href);
+    };
+  </script>
+</body>
+
+
+</html>
