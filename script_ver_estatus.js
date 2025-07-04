@@ -134,18 +134,17 @@ const filtradas = ordenes.filter(o => {
   <td>${o.observacion || "-"}</td>
   <td>${o.estatus}</td>
 <td>${o.bodega_externa ? 'Sí' : 'No'}</td>
-  <td>
-    ${
-      esAdmin && o.estatus !== "finalizada"
-        ? `<div class="d-grid gap-2">
-             <button class="btn btn-sm btn-primary" onclick="editarOrden(${o.no_orden})">Editar</button>
-             <button class="btn btn-sm btn-danger" onclick="eliminarOrden(${o.no_orden})">Eliminar</button>
-           </div>`
-        : o.estatus === "generada"
-          ? `<span class="text-muted">No editable</span>`
-          : `<span class="text-muted">No editable</span>`
-    }
-  </td>
+<td>
+  ${
+    (esAdmin || (rol === "consignatario" && o.estatus === "generada"))
+      ? `<div class="d-grid gap-2">
+           <button class="btn btn-sm btn-primary" onclick="editarOrden(${o.no_orden})">Editar</button>
+           <button class="btn btn-sm btn-danger" onclick="eliminarOrden(${o.no_orden})">Eliminar</button>
+         </div>`
+      : `<span class="text-muted">No editable</span>`
+  }
+</td>
+
 `;
     cuerpo.appendChild(tr);
   });
