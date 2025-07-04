@@ -73,7 +73,7 @@ function mostrarOrdenes() {
 
   // Aplicar filtros
  ordenesFiltradas = ordenes.filter(o => {
-  const fecha = new Date(o.fecha_generada).toISOString().slice(0, 10);
+const fecha = new Date(o.fecha_generada).toLocaleDateString('fr-CA');
 
   if (rol === "consignatario" && o.nit_usuario !== nitUsuario) return false;
 
@@ -235,7 +235,7 @@ function exportarExcel() {
   ];
 
   ordenes.filter(o => {
-    const fecha = new Date(o.fecha_generada).toISOString().slice(0, 10);
+   const fecha = new Date(o.fecha_generada).toLocaleDateString('fr-CA');
     const filtroBodegaExt = document.getElementById("filtroBodegaExterna").value;
 
 
@@ -313,7 +313,7 @@ function limpiarFiltros() {
   filtroPiloto.value = "";
   filtroBodegaExterna.value = "";
   
-  const hoy = new Date().toISOString().split("T")[0];
+ const hoy = new Date().toLocaleDateString('fr-CA'); // Formato YYYY-MM-DD
   filtroInicio.value = hoy;
   filtroFin.value = hoy;
 
@@ -356,10 +356,9 @@ document.getElementById("btnSiguiente").addEventListener("click", () => {
   }
 
   // ⏰ Establecer fecha actual como valor por defecto en los filtros
-  const hoy = new Date().toISOString().split("T")[0];
+  const hoy = new Date().toLocaleDateString('fr-CA'); // Formato YYYY-MM-DD
   filtroInicio.value = hoy;
   filtroFin.value = hoy;
 
   cargarOrdenes();
 });
-
