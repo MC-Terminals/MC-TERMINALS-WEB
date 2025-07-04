@@ -1,5 +1,7 @@
 
 
+
+
 const tabla = document.getElementById("cuerpoTabla");
 const filtroEstatus = document.getElementById("filtroEstatus");
 const filtroInicio = document.getElementById("filtroFechaInicio");
@@ -84,7 +86,7 @@ function mostrarOrdenes() {
 
   // 2. Aplicar los filtros de búsqueda
   ordenesFiltradas = ordenesFiltradas.filter((o) => {
-    const fecha = new Date(o.fecha_generada).toISOString().slice(0, 10);
+const fecha = new Date(o.fecha_generada).toLocaleDateString('fr-CA');
     return (
       (!estatus || o.estatus === estatus) &&
       (!inicio || fecha >= inicio) &&
@@ -293,10 +295,15 @@ if (rol === "operador_externo" && !orden.bodega_externa) {
   .forEach(f => f.addEventListener("input", mostrarOrdenes));
 
 document.addEventListener("DOMContentLoaded", () => {
-  const hoy = new Date().toISOString().split("T")[0];
-  const inicioMes = new Date();
-  inicioMes.setDate(1);
-  const inicioMesStr = inicioMes.toISOString().split("T")[0];
+  const hoy = new Date().toLocaleDateString('fr-CA');  // yyyy-mm-dd en hora local
+const inicioMes = new Date();
+inicioMes.setDate(1);
+const inicioMesStr = inicioMes.toLocaleDateString('fr-CA');
+setInterval(() => {
+  const hoyActualizado = new Date().toLocaleDateString('fr-CA');
+  filtroFin.value = hoyActualizado;
+}, 60 * 1000); // actualiza cada 60 segundos
+
 
   filtroInicio.value = inicioMesStr;
   filtroFin.value = hoy;
