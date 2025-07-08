@@ -257,7 +257,7 @@ function exportarExcel() {
   .forEach(o => {
 ws_data.push([
   o.no_orden,
-  new Date(o.fecha_generada).toLocaleString(),
+  o.fecha_generada ? new Date(o.fecha_generada) : null,
   buquesPorId[o.buque] || o.buque,
   o.bl,
   empresasPorNit[o.nit_usuario] || "Desconocida",
@@ -266,26 +266,54 @@ ws_data.push([
   o.producto,
   o.bodega,
   o.cantidad_qq,
-  o.cantidad_ton.toFixed(2),
+  o.cantidad_ton,
   o.estatus,
-  o.fecha_generada ? new Date(o.fecha_generada).toLocaleString() : "",
-  o.fecha_registrada ? new Date(o.fecha_registrada).toLocaleString() : "",
-  o.fecha_salio_predio ? new Date(o.fecha_salio_predio).toLocaleString() : "",
-  o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial).toLocaleString() : "",
-  o.fecha_finalizada ? new Date(o.fecha_finalizada).toLocaleString() : "",
-  o.boleta_final || "",
-  o.fecha_bodega_externa ? new Date(o.fecha_bodega_externa).toLocaleString() : ""
+  o.fecha_generada ? new Date(o.fecha_generada) : null,
+  o.fecha_registrada ? new Date(o.fecha_registrada) : null,
+  o.fecha_salio_predio ? new Date(o.fecha_salio_predio) : null,
+  o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial) : null,
+  o.fecha_finalizada ? new Date(o.fecha_finalizada) : null,
+  o.boleta_final ? Number(o.boleta_final) : null,
+  o.fecha_bodega_externa ? new Date(o.fecha_bodega_externa) : null
 ]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-  // Ajustar ancho automático para cada columna
-  const colWidths = ws_data[0].map((_, i) => {
-    const maxLen = ws_data.reduce((acc, row) => Math.max(acc, String(row[i] || "").length), 10);
-    return { wch: maxLen + 5 }; // +5 para espacio extra
+  // ✅ Aplicar formato de fecha y hora a las columnas correspondientes
+const dateColumns = [1, 12, 13, 14, 15, 16, 18]; // Índices de columnas con fechas
+for (let i = 1; i < ws_data.length; i++) {
+  dateColumns.forEach(col => {
+    const ref = XLSX.utils.encode_cell({ r: i, c: col });
+    const cell = ws[ref];
+    if (cell && cell.v instanceof Date) {
+      cell.t = 'd'; // Tipo fecha
+      cell.z = 'dd/mm/yyyy hh:mm:ss'; // Formato fecha y hora
+    }
   });
-  ws["!cols"] = colWidths;
+}
+
+// ✅ Aplicar formato numérico a la columna de boleta (índice 17)
+for (let i = 1; i < ws_data.length; i++) {
+  const ref = XLSX.utils.encode_cell({ r: i, c: 17 });
+  const cell = ws[ref];
+  if (cell && typeof cell.v === 'number') {
+    cell.t = 'n'; // Tipo numérico
+    cell.z = '0'; // Sin decimales
+  }
+}
+
+// Ajustar ancho automático con mejor precisión
+const colWidths = ws_data[0].map((_, colIdx) => {
+  const maxLen = ws_data.reduce((max, row) => {
+    const cell = row[colIdx];
+    const value = cell instanceof Date ? cell.toLocaleString() : String(cell || "");
+    return Math.max(max, value.length);
+  }, 10);
+  return { wch: maxLen + 2 }; // Ajuste más fino
+});
+ws["!cols"] = colWidths;
+
 
   // Encabezado azul con letras blancas (solo visual en Excel si se usa con SheetJS Pro o herramientas externas)
   const range = XLSX.utils.decode_range(ws['!ref']);
@@ -362,3 +390,4 @@ document.getElementById("btnSiguiente").addEventListener("click", () => {
 
   cargarOrdenes();
 });
+
