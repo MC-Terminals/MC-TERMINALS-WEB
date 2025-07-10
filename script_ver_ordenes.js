@@ -216,6 +216,16 @@ async function imprimirOrden(no_orden) {
   ventana.document.close();
 }
 
+function formatearFecha(fecha) {
+  if (!fecha) return "";
+  const f = new Date(fecha);
+  f.setHours(f.getHours() - 6); // Ajustar UTC-6
+  return f.toLocaleString("es-GT", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  });
+}
 
 
 function exportarExcel() {
@@ -228,7 +238,7 @@ function exportarExcel() {
   "No. Orden", "Fecha Creada", "Buque", "Poliza", "Empresa", "Placa", "Piloto", "Producto", "Bodega",
   "Cant. (qq)", "Cant. (ton)", "Estatus",
   "Fecha Generada", "Fecha Registrada", "Fecha Salió Predio", "Fecha Peso Inicial", "Fecha Finalizada", "Boleta",
-  "Fecha Bodega Externa"
+  "Fecha Bodega Externa", "Observación"
 ]
 
 
@@ -274,7 +284,8 @@ ws_data.push([
   o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial) : null,
   o.fecha_finalizada ? new Date(o.fecha_finalizada) : null,
   o.boleta_final ? Number(o.boleta_final) : null,
-  o.fecha_bodega_externa ? new Date(o.fecha_bodega_externa) : null
+  o.fecha_bodega_externa ? new Date(o.fecha_bodega_externa) : null,
+  o.observacion
 ]);
   });
 
@@ -330,8 +341,6 @@ ws["!cols"] = colWidths;
   XLSX.utils.book_append_sheet(wb, ws, "Órdenes");
   XLSX.writeFile(wb, "ordenes_reporte.xlsx");
 }
-
-
 
 function limpiarFiltros() {
   filtroEstatus.value = "";
