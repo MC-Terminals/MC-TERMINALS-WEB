@@ -131,9 +131,22 @@
     const inputFin = document.getElementById("fechaFin");
 
     const fechaGuatemalaHoy = () => {
-      const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Guatemala' }); // yyyy-mm-dd
-      return hoy;
+      return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Guatemala' });
     };
+
+    function formatearFechaGuatemala(fechaUTC) {
+      const fecha = new Date(fechaUTC);
+      return fecha.toLocaleString("es-GT", {
+        timeZone: "America/Guatemala",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      });
+    }
 
     const cargarHistorial = async () => {
       const ordenFiltro = inputOrden.value.trim();
@@ -142,16 +155,24 @@
 
       let query = supabase.from("historial_ordenes").select("*");
 
-      // Filtro por fecha
       if (fechaInicio && fechaFin) {
-        query = query.gte("fecha_modificacion", fechaInicio + "T00:00:00")
-                     .lte("fecha_modificacion", fechaFin + "T23:59:59");
+        const inicio = new Date(`${fechaInicio}T00:00:00`);
+        const fin = new Date(`${fechaFin}T23:59:59`);
+
+        const inicioUTC = new Date(inicio.toLocaleString("en-US", { timeZone: "UTC" }));
+        const finUTC = new Date(fin.toLocaleString("en-US", { timeZone: "UTC" }));
+
+        query = query
+          .gte("fecha_modificacion", inicioUTC.toISOString())
+          .lte("fecha_modificacion", finUTC.toISOString());
       }
 
-      // Filtro por No. de Orden (aproximado)
-      if (ordenFiltro !== "") {
-        query = query.ilike("no_orden::text", `%${ordenFiltro}%`);
-      }
+    if (ordenFiltro !== "") {
+  const ordenInt = parseInt(ordenFiltro);
+  if (!isNaN(ordenInt)) {
+    query = query.eq("no_orden", ordenInt);
+  }
+}
 
       query = query.order("fecha_modificacion", { ascending: false });
 
@@ -178,7 +199,7 @@
           <td>${entry.valor_anterior || ""}</td>
           <td>${entry.valor_nuevo || ""}</td>
           <td>${entry.nit_usuario || ""}</td>
-          <td>${(entry.fecha_modificacion || "").replace("T", " ").split(".")[0]}</td>
+          <td>${formatearFechaGuatemala(entry.fecha_modificacion)}</td>
         `;
         historialBody.appendChild(row);
       });
