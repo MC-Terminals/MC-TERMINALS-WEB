@@ -171,23 +171,35 @@ async function cargarDatosOrden() {
   blSelect.value = data.bl;
 }
 
-// Función para obtener hora local Guatemala compatible con Supabase
 function obtenerFechaHoraGuatemala() {
   const ahora = new Date();
-  const offsetGMT = ahora.getTimezoneOffset() / 60;
-  const offsetGuatemala = -6;
-  const diferencia = offsetGuatemala - (-offsetGMT);
-  ahora.setHours(ahora.getHours() + diferencia);
-  return ahora.toISOString().slice(0, 19).replace("T", " ");
+  const opciones = {
+    timeZone: "America/Guatemala",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  };
+
+  const fechaHora = new Intl.DateTimeFormat("en-CA", opciones).formatToParts(ahora);
+  const partes = Object.fromEntries(fechaHora.map(({ type, value }) => [type, value]));
+
+  return `${partes.year}-${partes.month}-${partes.day} ${partes.hour}:${partes.minute}:${partes.second}`;
 }
+
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const fechaSeleccionada = fechaInput.value;
-  const hoy = new Date().toISOString().split("T")[0];
+  const fechaSeleccionadaDate = new Date(fechaSeleccionada + "T00:00:00");
+  const hoyDate = new Date();
+  hoyDate.setHours(0, 0, 0, 0);
 
-  if (fechaSeleccionada < hoy) {
+  if (fechaSeleccionadaDate < hoyDate) {
     alert("No se permiten fechas pasadas.");
     return;
   }
@@ -219,15 +231,15 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Detectar si hubo cambios reales
+  // Detectar si hubo cambios reales (excluyendo fecha_generada para historial)
   let huboCambios = false;
   const cambios = [];
 
   for (const campo in nuevosDatos) {
-    if (nuevosDatos[campo] != datosPrevios[campo]) {
+    if (campo !== "fecha_generada" && nuevosDatos[campo] != datosPrevios[campo]) {
       huboCambios = true;
       cambios.push({
-        no_orden: datosPrevios.no_orden, // Asegúrate que sea UUID si así está en la tabla
+        no_orden: datosPrevios.no_orden,
         nit_usuario: localStorage.getItem("nit"),
         campo: campo,
         valor_anterior: datosPrevios[campo],
@@ -237,18 +249,18 @@ form.addEventListener("submit", async (e) => {
     }
   }
 
-  if (!huboCambios) {
+  if (!huboCambios && nuevosDatos.fecha_generada === datosPrevios.fecha_generada) {
     mensaje.style.color = "orange";
     mensaje.innerText = "No se realizaron cambios en la orden.";
     return;
   }
 
-  // Guardar historial solo si hubo cambios
+  // Guardar historial solo si hubo cambios en otros campos (no fecha)
   if (cambios.length > 0) {
     const { error: errorHistorial } = await supabase
       .from("historial_ordenes")
       .insert(cambios);
-    
+
     if (errorHistorial) {
       console.error("Error al guardar historial de modificaciones:", errorHistorial);
     }
@@ -271,6 +283,11 @@ form.addEventListener("submit", async (e) => {
     }, 2000);
   }
 });
+
+
+
+
+document.addEventListener("DOMContentLoaded", cargarDatosOrden);
 
 
 
