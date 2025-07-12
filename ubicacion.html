@@ -44,41 +44,32 @@
 
 
 
- <script>
-  const mapa = L.map('mapa').setView([14.6349, -90.5069], 7); // Vista general de Guatemala
+<script>
+  // Solo si no es consignatario
+  const rol = localStorage.getItem("rol");
+  if (rol !== "consignatario" && "geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const nombre = localStorage.getItem("nombre") || "Desconocido";
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(mapa);
+      // Guardar localmente por si se necesita luego
+      localStorage.setItem("lat", lat);
+      localStorage.setItem("lng", lng);
 
-  const canalUbicaciones = new BroadcastChannel("ubicaciones_usuarios");
-  const marcadores = [];
-
-  // Recibir ubicaciones de otros usuarios
-  canalUbicaciones.onmessage = (e) => {
-    const { nombre, rol, lat, lng } = e.data;
-    const marker = L.marker([lat, lng]).addTo(mapa)
-      .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`);
-    marcadores.push(marker);
-  };
-
-  // Enviar tu propia ubicación si está guardada
-  const lat = localStorage.getItem("lat");
-  const lng = localStorage.getItem("lng");
-  const nombre = localStorage.getItem("nombre") || "Desconocido";
-  const rol = localStorage.getItem("rol") || "N/A";
-
-  if (lat && lng) {
-    const marker = L.marker([lat, lng]).addTo(mapa)
-      .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`).openPopup();
-    marcadores.push(marker);
-
-    // Enviar tu ubicación a los demás
-    canalUbicaciones.postMessage({ nombre, rol, lat: parseFloat(lat), lng: parseFloat(lng) });
-  } else {
-    alert("No se encontró tu ubicación. Recarga o habilita permisos.");
+      // Enviar ubicación al canal
+      const canalUbicaciones = new BroadcastChannel("ubicaciones_usuarios");
+      canalUbicaciones.postMessage({ nombre, rol, lat, lng });
+    }, (err) => {
+      console.warn("No se pudo obtener la ubicación:", err);
+    }, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
   }
 </script>
+
 
 </body>
 </html>
