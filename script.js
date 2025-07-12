@@ -37,14 +37,15 @@ if (password !== user.contraseña) {
   localStorage.setItem("nombre", user.empresa);
 
   // 🔓 Desbloqueo de audio tras login
-  const sonidoLogin = new Audio("notificacion.mp3");
-  sonidoLogin.play().then(() => {
-    sonidoLogin.pause();
-    sonidoLogin.currentTime = 0;
-    console.log("✅ Permiso de audio desbloqueado");
-  }).catch((err) => {
-    console.warn("⚠️ No se pudo desbloquear el audio:", err);
-  });
+ const sonidoLogin = new Audio("notificacion.mp3");
+sonidoLogin.play().then(() => {
+  sonidoLogin.pause();
+  sonidoLogin.currentTime = 0;
+  console.log("✅ Permiso de audio desbloqueado");
+}).catch((err) => {
+  console.warn("⚠️ No se pudo desbloquear el audio:", err);
+});
+
 
 setTimeout(() => {
   window.location.href = "menu.html";
