@@ -1,4 +1,3 @@
-<!-- ubicacion.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -38,38 +37,30 @@
 <body>
   <h2>🗺️ Mapa con tu ubicación</h2>
   <div id="mapa"></div>
-
-  <!-- 🔙 Botón para volver -->
   <a href="menu.html" class="btn-volver">🔙 Regresar al Menú</a>
 
+  <script>
+    let mapa = L.map('mapa').setView([14.6349, -90.5069], 7); // Vista inicial centrada en Guatemala
 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(mapa);
 
-<script>
-  // Solo si no es consignatario
-  const rol = localStorage.getItem("rol");
-  if (rol !== "consignatario" && "geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const nombre = localStorage.getItem("nombre") || "Desconocido";
+    const canal = new BroadcastChannel("ubicaciones_usuarios");
+    const usuariosMostrados = [];
 
-      // Guardar localmente por si se necesita luego
-      localStorage.setItem("lat", lat);
-      localStorage.setItem("lng", lng);
+    canal.onmessage = (e) => {
+      const { nombre, rol, lat, lng } = e.data;
 
-      // Enviar ubicación al canal
-      const canalUbicaciones = new BroadcastChannel("ubicaciones_usuarios");
-      canalUbicaciones.postMessage({ nombre, rol, lat, lng });
-    }, (err) => {
-      console.warn("No se pudo obtener la ubicación:", err);
-    }, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    });
-  }
-</script>
+      if (!usuariosMostrados.some(u => u.nombre === nombre)) {
+        usuariosMostrados.push({ nombre, lat, lng });
 
-
+        L.marker([lat, lng])
+          .addTo(mapa)
+          .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`)
+          .openPopup();
+      }
+    };
+  </script>
 </body>
 </html>
