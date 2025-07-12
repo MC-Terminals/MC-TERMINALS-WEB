@@ -40,27 +40,29 @@
   <a href="menu.html" class="btn-volver">🔙 Regresar al Menú</a>
 
   <script>
-    let mapa = L.map('mapa').setView([14.6349, -90.5069], 7); // Vista inicial centrada en Guatemala
+    document.addEventListener("DOMContentLoaded", () => {
+      const mapa = L.map('mapa').setView([14.6349, -90.5069], 7); // Guatemala
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(mapa);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(mapa);
 
-    const canal = new BroadcastChannel("ubicaciones_usuarios");
-    const usuariosMostrados = [];
+      const usuariosMostrados = [];
+      const canal = new BroadcastChannel("ubicaciones_usuarios");
 
-    canal.onmessage = (e) => {
-      const { nombre, rol, lat, lng } = e.data;
+      canal.onmessage = (e) => {
+        const { nombre, rol, lat, lng } = e.data;
 
-      if (!usuariosMostrados.some(u => u.nombre === nombre)) {
-        usuariosMostrados.push({ nombre, lat, lng });
+        if (!usuariosMostrados.some(u => u.nombre === nombre)) {
+          usuariosMostrados.push({ nombre, lat, lng });
 
-        L.marker([lat, lng])
-          .addTo(mapa)
-          .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`)
-          .openPopup();
-      }
-    };
+          L.marker([lat, lng])
+            .addTo(mapa)
+            .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`)
+            .openPopup();
+        }
+      };
+    });
   </script>
 </body>
 </html>
