@@ -24,7 +24,7 @@ document.body.appendChild(emergente);
 // Crea el audio para notificación
 const audio = document.createElement("audio");
 audio.id = "audioNotificacion";
-audio.src = "sonidos/notificacion.mp3";  // Ruta local al sonido
+audio.src = "notificacion.mp3";  // Ruta sin carpeta
 audio.preload = "auto";
 document.body.appendChild(audio);
 
