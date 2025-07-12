@@ -44,41 +44,41 @@
 
 
 
-  <script>
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+ <script>
+  const mapa = L.map('mapa').setView([14.6349, -90.5069], 7); // Vista general de Guatemala
 
-        const mapa = L.map('mapa').setView([lat, lon], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(mapa);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
-        }).addTo(mapa);
+  const canalUbicaciones = new BroadcastChannel("ubicaciones_usuarios");
+  const marcadores = [];
 
-        L.marker([lat, lon]).addTo(mapa)
-          .bindPopup("📍 Aquí estás tú").openPopup();
-      }, function () {
-        alert("No se pudo obtener tu ubicación.");
-      }, {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      });
-    } else {
-      alert("Tu navegador no permite geolocalización.");
-    }
-    const canalUsuarios = new BroadcastChannel("usuarios_activos");
+  // Recibir ubicaciones de otros usuarios
+  canalUbicaciones.onmessage = (e) => {
+    const { nombre, rol, lat, lng } = e.data;
+    const marker = L.marker([lat, lng]).addTo(mapa)
+      .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`);
+    marcadores.push(marker);
+  };
 
-const usuarioActivo = {
-  nombre: localStorage.getItem("nombre") || "Desconocido",
-  rol: localStorage.getItem("rol") || "N/A",
-  hora: new Date().toLocaleTimeString()
-};
+  // Enviar tu propia ubicación si está guardada
+  const lat = localStorage.getItem("lat");
+  const lng = localStorage.getItem("lng");
+  const nombre = localStorage.getItem("nombre") || "Desconocido";
+  const rol = localStorage.getItem("rol") || "N/A";
 
-// Enviar mensaje cada vez que se entra a una página
-canalUsuarios.postMessage(usuarioActivo);
+  if (lat && lng) {
+    const marker = L.marker([lat, lng]).addTo(mapa)
+      .bindPopup(`<strong>${nombre}</strong><br>Rol: ${rol}`).openPopup();
+    marcadores.push(marker);
 
-  </script>
+    // Enviar tu ubicación a los demás
+    canalUbicaciones.postMessage({ nombre, rol, lat: parseFloat(lat), lng: parseFloat(lng) });
+  } else {
+    alert("No se encontró tu ubicación. Recarga o habilita permisos.");
+  }
+</script>
+
 </body>
 </html>
