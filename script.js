@@ -37,7 +37,7 @@ if (password !== user.contraseña) {
   localStorage.setItem("nombre", user.empresa);
 
   // 🔓 Desbloqueo de audio tras login
-  const sonidoLogin = new Audio("sonidos/notificacion.mp3");
+  const sonidoLogin = new Audio("notificacion.mp3");
   sonidoLogin.play().then(() => {
     sonidoLogin.pause();
     sonidoLogin.currentTime = 0;
