@@ -47,7 +47,7 @@ if (password !== user.contraseña) {
   });
 
 setTimeout(() => {
-  window.location.href = "solicitar_ubicacion.html";
+  window.location.href = "menu.html";
 }, 1500);
 
 }
