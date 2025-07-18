@@ -298,7 +298,7 @@ ws_data.push([
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
   // ✅ Aplicar formato de fecha y hora a las columnas correspondientes
-const dateColumns = [1, 12, 13, 14, 15, 16, 18]; // Índices de columnas con fechas
+const dateColumns = [2, 15, 16, 17, 18, 19, 21]; // Índices de columnas con fechas
 for (let i = 1; i < ws_data.length; i++) {
   dateColumns.forEach(col => {
     const ref = XLSX.utils.encode_cell({ r: i, c: col });
@@ -312,7 +312,7 @@ for (let i = 1; i < ws_data.length; i++) {
 
 // ✅ Aplicar formato numérico a la columna de boleta (índice 17)
 for (let i = 1; i < ws_data.length; i++) {
-  const ref = XLSX.utils.encode_cell({ r: i, c: 17 });
+  const ref = XLSX.utils.encode_cell({ r: i, c: 20 });
   const cell = ws[ref];
   if (cell && typeof cell.v === 'number') {
     cell.t = 'n'; // Tipo numérico
