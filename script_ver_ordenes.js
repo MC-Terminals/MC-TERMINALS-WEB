@@ -312,7 +312,7 @@ for (let i = 1; i < ws_data.length; i++) {
 
 // ✅ Aplicar formato numérico a la columna de boleta (índice 17)
 for (let i = 1; i < ws_data.length; i++) {
-  const ref = XLSX.utils.encode_cell({ r: i, c: 20 });
+  const ref = XLSX.utils.encode_cell({ r: i, c: 17 });
   const cell = ws[ref];
   if (cell && typeof cell.v === 'number') {
     cell.t = 'n'; // Tipo numérico
