@@ -59,24 +59,24 @@ tbody.appendChild(tr);
 async function confirmarEliminacion(id, nombre) {
   const clave = prompt(`🔐 Ingresa tu contraseña para eliminar el buque: "${nombre}"`);
   const nit = localStorage.getItem("nit");
+  if (!clave || !nit) { alert("Cancelado."); return; }
 
-  if (!clave || !nit) {
-    alert("Cancelado.");
+  const { data: ok, error } = await supabase.rpc('eliminar_buque_seguro', {
+    p_nit: nit,
+    p_password: clave,
+    p_buque_id: id
+  });
+
+  if (error) {
+    console.error(error);
+    alert("❌ Error al intentar eliminar.");
     return;
   }
-
-  const { data: usuario, error } = await supabase
-    .from("usuarios")
-    .select("contraseña")
-    .eq("nit", nit)
-    .single();
-
-  if (error || usuario.contraseña !== clave) {
-    alert("❌ Contraseña incorrecta.");
+  if (!ok) {
+    alert("❌ Contraseña incorrecta o no tienes permiso.");
     return;
   }
-
-  await supabase.from("buques").delete().eq("id", id);
   alert("✅ Buque eliminado.");
   await cargarBuques();
 }
+
