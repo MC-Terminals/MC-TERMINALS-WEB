@@ -165,19 +165,30 @@ async function eliminarOrden(no_orden) {
   const confirmar = confirm("¿Estás seguro de que deseas eliminar esta orden?");
   if (!confirmar) return;
 
-  const { error } = await supabase
-    .from("ordenes")
-    .delete()
-    .eq("no_orden", no_orden);
+  const nitUsuario = localStorage.getItem("nit");
+  if (!nitUsuario) {
+    alert("Sesión inválida. Inicia sesión de nuevo.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  // Llamamos al RPC directo con el número de orden (int)
+  const { data, error } = await supabase.rpc("eliminar_orden_seguro", {
+    p_no_orden: Number(no_orden),
+    p_nit: nitUsuario
+  });
 
   if (error) {
-    alert("Error al eliminar la orden.");
     console.error(error);
-  } else {
-    alert("Orden eliminada correctamente.");
-    cargarOrdenes(); // Recargar tabla
+    alert("Error al eliminar la orden: " + (error.message || "desconocido"));
+    return;
   }
+
+  alert(data);   // e.g. "✅ Orden eliminada correctamente."
+  cargarOrdenes();
 }
+
+
 
 document.addEventListener("DOMContentLoaded", () => {
   cargarOrdenes();
