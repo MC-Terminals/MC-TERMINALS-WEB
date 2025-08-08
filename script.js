@@ -15,46 +15,33 @@ if (path.includes("login.html")) {
     const password = document.getElementById("password").value.trim();
     const mensaje = document.getElementById("mensaje");
 
-    const { data: user, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("nit", nit)
-      .single();
+    // 👇 Ya NO hacemos select a usuarios ni comparamos en el cliente
+    const { data, error } = await supabase.rpc('login_por_nit', {
+      p_nit: nit,
+      p_password: password
+    });
 
-    if (error || !user) {
-      mensaje.innerText = "Usuario no encontrado";
+    if (error || !data || data.length === 0) {
+      mensaje.innerText = "Usuario o contraseña incorrectos";
       return;
     }
 
-if (password !== user.contraseña) {
-  mensaje.innerText = "Contraseña incorrecta";
-} else {
-  mensaje.style.color = "green";
-  mensaje.innerText = `¡Bienvenido, ${user.empresa}!`;
+    const { nit: nitOK, rol, empresa } = data[0];
+    mensaje.style.color = "green";
+    mensaje.innerText = `¡Bienvenido, ${empresa}!`;
 
-  localStorage.setItem("nit", user.nit);
-  localStorage.setItem("rol", user.rol);
-  localStorage.setItem("nombre", user.empresa);
+    localStorage.setItem("nit", nitOK);
+    localStorage.setItem("rol", rol);
+    localStorage.setItem("nombre", empresa);
 
- // 🔓 Desbloqueo de audio tras login
- const sonidoLogin = new Audio("notificacion.mp3");
-sonidoLogin.play().then(() => {
-  sonidoLogin.pause();
-  sonidoLogin.currentTime = 0;
-  console.log("✅ Permiso de audio desbloqueado");
-}).catch((err) => {
-  console.warn("⚠️ No se pudo desbloquear el audio:", err);
-});
+    // (opcional) desbloqueo de audio
+    const sonidoLogin = new Audio("notificacion.mp3");
+    sonidoLogin.play().then(()=>{ sonidoLogin.pause(); sonidoLogin.currentTime=0; });
 
-setTimeout(() => {
-  window.location.href = "menu.html";
-}, 1500);
-
-}
-
-
+    setTimeout(() => { window.location.href = "menu.html"; }, 1500);
   });
 }
+
 
 
 // 📝 REGISTRO
@@ -112,11 +99,12 @@ if (![...rolesPermitidos, ...rolesEspeciales].includes(rol)) {
 
 const { data, error } = await supabase.from("usuarios").insert([{
   nit,
-  contraseña: password,
+  password_hash: password,   // 👈 el trigger en la BD la hashea automático
   cargo,
   empresa,
   rol,
 }]);
+
 
 
     console.log("Respuesta Supabase:", data, error);
