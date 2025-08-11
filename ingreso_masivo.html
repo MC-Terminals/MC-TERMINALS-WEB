@@ -126,6 +126,7 @@
               <th>Nombre Transporte</th>
               <th>No. Orden Interna</th>
               <th>Observación</th>
+              <th>Estado Placa</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -155,6 +156,15 @@ let datosExcel = [];
 const rol = localStorage.getItem("rol");
 const nit = localStorage.getItem("nit");
 let todosBLs = [];
+
+// === NUEVO: referencia al input y reset al hacer click ===
+const excelInput = document.getElementById("excelInput");
+
+// Limpia el valor antes de abrir el diálogo, así 'change' se dispara aunque elijas el mismo archivo
+excelInput.addEventListener("click", () => {
+  excelInput.value = "";
+});
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   await cargarBuques();
@@ -259,34 +269,28 @@ function mostrarProductoDelBL() {
   prodSelect.disabled = true;
 }
 
-document.getElementById("excelInput").addEventListener("change", function (e) {
+// === REEMPLAZO: lectura del Excel y render ===
+excelInput.addEventListener("change", function (e) {
+  if (!e.target.files || !e.target.files[0]) return;
+
   const reader = new FileReader();
-  reader.onload = function (e) {
-    const data = new Uint8Array(e.target.result);
+  reader.onload = function (ev) {
+    const data = new Uint8Array(ev.target.result);
     const workbook = XLSX.read(data, { type: "array" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    datosExcel = XLSX.utils.sheet_to_json(sheet);
+
+    // defval:"" → celdas vacías como cadena, evita undefined
+    datosExcel = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+    // Limpia mensajes y vuelve a dibujar la vista previa (con validación de placa)
+    const mensaje = document.getElementById("mensaje");
+    mensaje.innerText = "";
     renderTablaPreview();
   };
   reader.readAsArrayBuffer(e.target.files[0]);
 });
 
-function renderTablaPreview() {
-  const tbody = document.querySelector("#tablaPreview tbody");
-  tbody.innerHTML = "";
-  datosExcel.forEach(row => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${row.Piloto || ""}</td>
-        <td>${row.Placa || ""}</td>
-        <td>${row["Cantidad (qq)"] || ""}</td>
-        <td>${row["Nombre Transporte"] || ""}</td>
-        <td>${row["No. Orden Interna"] || ""}</td>
-        <td>${row.Observación || ""}</td>
-      </tr>
-    `;
-  });
-}
+
 
 function descargarPlantilla() {
   const wb = XLSX.utils.book_new();
@@ -319,6 +323,73 @@ function limpiarFormulario() {
 }
 
 
+
+function validarYNormalizarPlaca(raw) {
+  if (raw === undefined || raw === null) {
+    return { ok: false, error: "Placa vacía." };
+  }
+
+  let s = String(raw).toUpperCase().trim();
+
+  // Quitar espacios internos
+  s = s.replace(/\s+/g, "");
+
+  // Quitar prefijo C o C- si lo trae
+  s = s.replace(/^C-?/, "");
+
+  // Dejar solo letras y números en el cuerpo
+  s = s.replace(/[^A-Z0-9]/g, "");
+
+  // Debe quedar exactamente 6: 3 dígitos + 3 letras
+  const cuerpo = s;
+  const esValida = /^\d{3}[A-Z]{3}$/.test(cuerpo);
+
+  if (!esValida) {
+    // Construir razón amigable
+    let razon = "";
+    if (cuerpo.length !== 6) {
+      razon = `Debe tener 6 caracteres (tiene ${cuerpo.length || 0}).`;
+    } else if (!/^\d{3}/.test(cuerpo)) {
+      razon = "Los primeros 3 deben ser números.";
+    } else if (!/[A-Z]{3}$/.test(cuerpo)) {
+      razon = "Los últimos 3 deben ser letras.";
+    } else {
+      razon = "Formato inválido.";
+    }
+    return { ok: false, error: razon, valorVisto: cuerpo };
+  }
+
+  return { ok: true, placa: `C-${cuerpo}` };
+}
+
+const toStr = (v) => (v == null ? "" : String(v).trim());
+
+function renderTablaPreview() {
+  const tbody = document.querySelector("#tablaPreview tbody");
+  tbody.innerHTML = "";
+
+  datosExcel.forEach((row) => {
+    const placaRaw = toStr(row["Placa"]);
+    const res = validarYNormalizarPlaca(placaRaw);
+    const estado = res.ok ? `OK → ${res.placa}` : `Error → ${res.error}`;
+    const trStyle = res.ok ? "" : ' style="background:#4b1a1a"';
+
+    tbody.innerHTML += `
+      <tr${trStyle}>
+        <td>${toStr(row["Piloto"])}</td>
+        <td>${placaRaw}</td>
+        <td>${toStr(row["Cantidad (qq)"])}</td>
+        <td>${toStr(row["Nombre Transporte"])}</td>
+        <td>${toStr(row["No. Orden Interna"])}</td>
+        <td>${toStr(row["Observación"])}</td>
+        <td>${estado}</td>
+      </tr>
+    `;
+  });
+}
+
+
+
 async function crearMasivas() {
   const mensaje = document.getElementById("mensaje");
   mensaje.innerText = "";
@@ -336,25 +407,55 @@ async function crearMasivas() {
     return;
   }
 
-  const fecha_generada = fechaInput ? new Date(fechaInput + "T00:00:00").toLocaleString("sv-SE") : new Date().toLocaleString("sv-SE");
+  const fecha_generada = fechaInput
+    ? new Date(fechaInput + "T00:00:00").toLocaleString("sv-SE")
+    : new Date().toLocaleString("sv-SE");
   const fecha_creada = new Date().toLocaleString("sv-SE");
 
-  const ordenes = datosExcel.map(row => ({
+const errores = [];
+const ordenes = [];
+
+datosExcel.forEach((row, idx) => {
+  const fila = idx + 2; // 1 = encabezado
+
+  // Normalizar y validar placa
+  const placaRaw = toStr(row["Placa"]);
+  const res = validarYNormalizarPlaca(placaRaw);
+
+  if (!res.ok) {
+    errores.push(`Fila ${fila}: "${placaRaw}" → ${res.error}`);
+    return;
+  }
+
+  const cantidad = Number(row["Cantidad (qq)"]) || 0;
+  // (Opcional) si quieres bloquear cantidades <= 0:
+  // if (!(cantidad > 0)) { errores.push(`Fila ${fila}: Cantidad (qq) debe ser mayor a 0.`); return; }
+
+  ordenes.push({
     nit_usuario: nit,
-    piloto: row.Piloto || "",
-    placa: row.Placa || "",
+    piloto: toStr(row["Piloto"]),
+    placa: res.placa, // ← ya normalizada a C-###
     tipo_unidad,
     producto,
     buque,
     bl,
     bodega,
-    cantidad_qq: Number(row["Cantidad (qq)"]) || 0,
-    nombre_transporte: row["Nombre Transporte"] || "",
-    no_orden_interna: row["No. Orden Interna"] || "",
-    observacion: row.Observación || "",
+    cantidad_qq: cantidad,
+    nombre_transporte: toStr(row["Nombre Transporte"]),
+    no_orden_interna: toStr(row["No. Orden Interna"]),
+    observacion: toStr(row["Observación"]),
     fecha_generada,
-    fecha_creada
-  }));
+    fecha_creada,
+  });
+});
+
+if (errores.length > 0) {
+  const mensaje = document.getElementById("mensaje");
+  mensaje.style.color = "orange";
+  mensaje.innerHTML = "⚠️ Corrige las placas antes de continuar:<br>" +
+    errores.map(e => "• " + e).join("<br>");
+  return;
+}
 
   const { error } = await supabase.from("ordenes").insert(ordenes);
   if (error) {
@@ -370,6 +471,7 @@ async function crearMasivas() {
   }
 }
 
+
 // Seguridad de sesión
 if (!localStorage.getItem("nit")) {
   window.location.replace("login.html");
@@ -379,3 +481,4 @@ if (!localStorage.getItem("nit")) {
 
 </body>
 </html>
+
