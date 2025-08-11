@@ -134,6 +134,27 @@ productoSelect.addEventListener("change", () => {
   }
 });
 
+// === Validación de placa (editar) ===
+placaInput.addEventListener("input", (e) => {
+  let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const numeros = v.slice(0, 3).replace(/\D/g, "");
+  const letras  = v.slice(3, 6).replace(/[^A-Z]/g, "");
+  e.target.value = (numeros + letras).slice(0, 6);
+});
+
+placaInput.addEventListener("blur", () => {
+  const ok = /^\d{3}[A-Z]{3}$/.test(placaInput.value);
+  if (placaInput.value && !ok) {
+    mensaje.innerText = "Placa inválida. Formato requerido: C-123ABC (usted solo escribe 123ABC).";
+    mensaje.style.color = "orange";
+    placaInput.focus();
+  } else if (ok) {
+    mensaje.innerText = "";
+  }
+});
+
+
+
 
 
 
@@ -155,7 +176,7 @@ async function cargarDatosOrden() {
     return;
   }
 
-  placaInput.value = data.placa;
+  placaInput.value = (data.placa || "").toUpperCase().replace(/^C-/, "");
   pilotoInput.value = data.piloto;
   bodegaSelect.value = data.bodega;
   tipoUnidadSelect.value = data.tipo_unidad;
@@ -210,9 +231,15 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  // 1) Validar placa ANTES de armar el objeto
+  const placaRaw = placaInput.value.trim().toUpperCase();
+  if (!/^\d{3}[A-Z]{3}$/.test(placaRaw)) {
+    alert("Placa inválida. Debe escribir 3 números seguidos de 3 letras, por ejemplo: 123ABC. El sistema agregará C- automáticamente.");
+    return;
+  }
   // Datos nuevos ingresados
-  const nuevosDatos = {
-    placa: placaInput.value.trim(),
+   const nuevosDatos = {
+    placa: `C-${placaRaw}`,
     piloto: pilotoInput.value.trim(),
     producto: productoSelect.value,
     bodega: bodegaSelect.value,
@@ -223,8 +250,7 @@ form.addEventListener("submit", async (e) => {
     observacion: observacionInput.value.trim(),
     fecha_generada: fechaSeleccionada + " 00:00:00",
     nombre_transporte: nombreTransporteInput.value.trim(),
-no_orden_interna: noOrdenInternaInput.value.trim(),
-
+    no_orden_interna: noOrdenInternaInput.value.trim(),
   };
 
   // Obtener datos actuales de la orden antes de actualizar
