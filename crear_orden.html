@@ -164,7 +164,9 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">Cantidad (qq)</label>
-            <input type="number" class="form-control" id="cantidad_qq" required min="1">
+<input type="number" class="form-control" id="cantidad_qq"
+       required min="1" step="any" inputmode="decimal">
+
           </div>
         </div>
 
@@ -266,7 +268,14 @@ const placa = `C-${placaRaw}`; // ← se guarda con C- automáticamente
   const tipo_unidad = document.getElementById("tipo_unidad").value;
   const producto = document.getElementById("producto").value;
   const bodega = document.getElementById("bodega").value;
-  const cantidad_qq = parseInt(document.getElementById("cantidad_qq").value);
+  const cantidad_qq = parseFloat(
+  document.getElementById("cantidad_qq").value.replace(",", ".")
+);
+if (isNaN(cantidad_qq) || cantidad_qq < 1) {
+  mensaje.innerText = "Ingrese una cantidad válida (puede llevar decimales y debe ser ≥ 1).";
+  mensaje.style.color = "orange";
+  return;
+}
   const cantidad_ton = parseFloat((cantidad_qq / 22.046).toFixed(2));
   const buque = document.getElementById("buque").value.trim();
   const bl = document.getElementById("bl").value.trim();
