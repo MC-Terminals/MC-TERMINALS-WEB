@@ -362,7 +362,47 @@ function validarYNormalizarPlaca(raw) {
   return { ok: true, placa: `C-${cuerpo}` };
 }
 
+
 const toStr = (v) => (v == null ? "" : String(v).trim());
+
+function parseCantidadQQ(v) {
+  if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
+
+  // Si ya viene como número desde xlsx, úsalo directo
+  if (typeof v === "number") {
+    if (v < 1) return { ok: false, error: "debe ser ≥ 1" };
+    return { ok: true, valor: Number(v.toFixed(4)) };
+  }
+
+  let s = String(v).trim().replace(/\s/g, "");
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+
+  if (hasDot && hasComma) {
+    // Decide según el último separador usado
+    const lastDot = s.lastIndexOf(".");
+    const lastComma = s.lastIndexOf(",");
+    if (lastComma > lastDot) {
+      // 1.234,56 -> 1234.56
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      // 1,234.56 -> 1234.56
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma && !hasDot) {
+    // Solo coma -> trátala como decimal (458,770 -> 458.770)
+    s = s.replace(",", ".");
+  }
+  // Solo punto o sin separadores: se queda igual
+
+  const n = parseFloat(s);
+  if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
+  if (n < 1) return { ok: false, error: "debe ser ≥ 1" };
+
+  return { ok: true, valor: Number(n.toFixed(4)) }; // ajustado a 4 decimales
+}
+
+
 
 function renderTablaPreview() {
   const tbody = document.querySelector("#tablaPreview tbody");
@@ -427,7 +467,13 @@ datosExcel.forEach((row, idx) => {
     return;
   }
 
-  const cantidad = Number(row["Cantidad (qq)"]) || 0;
+const cantRes = parseCantidadQQ(row["Cantidad (qq)"]);
+if (!cantRes.ok) {
+  errores.push(`Fila ${fila}: Cantidad (qq) ${cantRes.error}. Valor: "${row["Cantidad (qq)"]}"`);
+  return;
+}
+const cantidad = cantRes.valor;
+
   // (Opcional) si quieres bloquear cantidades <= 0:
   // if (!(cantidad > 0)) { errores.push(`Fila ${fila}: Cantidad (qq) debe ser mayor a 0.`); return; }
 
@@ -481,4 +527,5 @@ if (!localStorage.getItem("nit")) {
 
 </body>
 </html>
+
 
