@@ -92,10 +92,23 @@
 
       <form id="formEditarOrden">
         <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Placa</label>
-            <input type="text" class="form-control" id="placa" required>
-          </div>
+        <div class="col-md-4">
+  <label class="form-label">Placa</label>
+  <div class="input-group">
+    <span class="input-group-text">C-</span>
+    <input
+      type="text"
+      class="form-control"
+      id="placa"
+      placeholder="123ABC"
+      maxlength="6"
+      autocomplete="off"
+      required
+    >
+  </div>
+  <small class="text-muted">Ingrese 3 números y 3 letras. Ejemplo: 123ABC (el sistema agrega C-).</small>
+</div>
+
           <div class="col-md-4">
             <label class="form-label">Piloto</label>
             <input type="text" class="form-control" id="piloto" required>
