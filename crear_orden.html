@@ -164,8 +164,15 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">Cantidad (qq)</label>
-<input type="number" class="form-control" id="cantidad_qq"
-       required min="1" step="any" inputmode="decimal">
+<input
+  type="number"
+  class="form-control"
+  id="cantidad_qq"
+  required
+  min="1"
+  step="0.0001"
+  inputmode="decimal"
+/>
 
           </div>
         </div>
@@ -232,6 +239,36 @@ productoSelect.addEventListener("mousedown", (e) => {
   }
 });
 
+function parseCantidadQQ(v) {
+  if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
+
+  let s = String(v).trim().replace(/\s/g, "");
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+
+  if (hasDot && hasComma) {
+    // decide según el último separador
+    const lastDot = s.lastIndexOf(".");
+    const lastComma = s.lastIndexOf(",");
+    if (lastComma > lastDot) {
+      // 1.234,56 -> 1234.56
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      // 1,234.56 -> 1234.56
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma && !hasDot) {
+    // solo coma = decimal
+    s = s.replace(",", ".");
+  }
+
+  const n = parseFloat(s);
+  if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
+  if (n < 1) return { ok: false, error: "La cantidad debe ser ≥ 1" };
+  return { ok: true, valor: Number(n.toFixed(4)) }; // 4 decimales máximo
+}
+
+
     form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -268,24 +305,25 @@ const placa = `C-${placaRaw}`; // ← se guarda con C- automáticamente
   const tipo_unidad = document.getElementById("tipo_unidad").value;
   const producto = document.getElementById("producto").value;
   const bodega = document.getElementById("bodega").value;
-  const cantidad_qq = parseFloat(
-  document.getElementById("cantidad_qq").value.replace(",", ".")
-);
-if (isNaN(cantidad_qq) || cantidad_qq < 1) {
-  mensaje.innerText = "Ingrese una cantidad válida (puede llevar decimales y debe ser ≥ 1).";
+const cantRes = parseCantidadQQ(document.getElementById("cantidad_qq").value);
+if (!cantRes.ok) {
+  mensaje.innerText = `⚠️ ${cantRes.error}`;
   mensaje.style.color = "orange";
   return;
 }
-  const cantidad_ton = parseFloat((cantidad_qq / 22.046).toFixed(2));
+const cantidad_qq = cantRes.valor;
+const cantidad_ton = Number((cantidad_qq / 22.046).toFixed(2));
+
   const buque = document.getElementById("buque").value.trim();
   const bl = document.getElementById("bl").value.trim();
   const observacion = document.getElementById("observacion").value.trim();
 
-  if (!piloto || !placa || !tipo_unidad || !producto || !bodega || !cantidad_qq || !buque || !bl) {
+  if (!piloto || !placa || !tipo_unidad || !producto || !bodega || !buque || !bl) {
   mensaje.innerText = "Por favor llena todos los campos requeridos.";
   mensaje.style.color = "orange";
   return;
 }
+
 
 
   if (!nit_usuario) {
