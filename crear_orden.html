@@ -128,10 +128,23 @@
             <label class="form-label">Piloto</label>
             <input type="text" class="form-control" id="piloto" required>
           </div>
-          <div class="col-md-6">
-            <label class="form-label">Placa</label>
-            <input type="text" class="form-control" id="placa" required>
-          </div>
+         <div class="col-md-6">
+  <label class="form-label">Placa</label>
+  <div class="input-group">
+    <span class="input-group-text">C-</span>
+    <input
+      type="text"
+      class="form-control"
+      id="placa"
+      placeholder="123ABC"
+      maxlength="6"
+      autocomplete="off"
+      required
+    >
+  </div>
+  <small class="text-muted">Ingrese 3 números y 3 letras. Ejemplo: 123ABC (el sistema agrega C-).</small>
+</div>
+
         </div>
 
         <div class="row mb-3">
@@ -238,7 +251,14 @@ if (inputFecha) {
 
   const nit_usuario = localStorage.getItem("nit");
   const piloto = document.getElementById("piloto").value.trim();
-  const placa = document.getElementById("placa").value.trim();
+  const placaRaw = document.getElementById("placa").value.trim().toUpperCase();
+if (!/^\d{3}[A-Z]{3}$/.test(placaRaw)) {
+  mensaje.innerText = "Placa inválida. Debe escribir 3 números seguidos de 3 letras, por ejemplo: 123ABC. El sistema agregará C- automáticamente.";
+  mensaje.style.color = "orange";
+  return;
+}
+const placa = `C-${placaRaw}`; // ← se guarda con C- automáticamente
+
   const tipo_unidad = document.getElementById("tipo_unidad").value;
   const producto = document.getElementById("producto").value;
   const bodega = document.getElementById("bodega").value;
@@ -420,6 +440,29 @@ function mostrarProductoDelBL() {
   // 🔒 Deshabilitar para que no se cambie manualmente
   prodSelect.disabled = true;
 }
+
+  // === NUEVO: validación de placa (input) ===
+  const placaInput = document.getElementById("placa");
+
+  // Restringe a 3 dígitos + 3 letras y fuerza mayúsculas
+  placaInput.addEventListener("input", (e) => {
+    let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const numeros = v.slice(0, 3).replace(/\D/g, "");   // solo dígitos en los 3 primeros
+    const letras  = v.slice(3, 6).replace(/[^A-Z]/g, ""); // solo letras en los 3 últimos
+    e.target.value = (numeros + letras).slice(0, 6);
+  });
+
+  // Mensaje si sale del campo con formato incorrecto
+  placaInput.addEventListener("blur", () => {
+    const ok = /^\d{3}[A-Z]{3}$/.test(placaInput.value);
+    if (placaInput.value && !ok) {
+      mensaje.innerText = "Placa inválida. Formato requerido: C-123ABC (usted solo escribe 123ABC).";
+      mensaje.style.color = "orange";
+      placaInput.focus();
+    } else if (ok) {
+      mensaje.innerText = "";
+    }
+  });
 
 
 </script>
