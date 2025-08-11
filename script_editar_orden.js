@@ -217,6 +217,44 @@ function obtenerFechaHoraGuatemala() {
   return `${partes.year}-${partes.month}-${partes.day} ${partes.hour}:${partes.minute}:${partes.second}`;
 }
 
+function parseCantidadQQ(v) {
+  if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
+
+  // Si ya viene como número desde xlsx, úsalo directo
+  if (typeof v === "number") {
+    if (v < 1) return { ok: false, error: "debe ser ≥ 1" };
+    return { ok: true, valor: Number(v.toFixed(4)) };
+  }
+
+  let s = String(v).trim().replace(/\s/g, "");
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+
+  if (hasDot && hasComma) {
+    // Decide según el último separador usado
+    const lastDot = s.lastIndexOf(".");
+    const lastComma = s.lastIndexOf(",");
+    if (lastComma > lastDot) {
+      // 1.234,56 -> 1234.56
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      // 1,234.56 -> 1234.56
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma && !hasDot) {
+    // Solo coma -> trátala como decimal (458,770 -> 458.770)
+    s = s.replace(",", ".");
+  }
+  // Solo punto o sin separadores: se queda igual
+
+  const n = parseFloat(s);
+  if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
+  if (n < 1) return { ok: false, error: "debe ser ≥ 1" };
+
+  return { ok: true, valor: Number(n.toFixed(4)) }; // ajustado a 4 decimales
+}
+
+
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -237,6 +275,13 @@ form.addEventListener("submit", async (e) => {
     alert("Placa inválida. Debe escribir 3 números seguidos de 3 letras, por ejemplo: 123ABC. El sistema agregará C- automáticamente.");
     return;
   }
+
+  // validar cantidad antes de armar nuevosDatos
+const cantRes = parseCantidadQQ(cantidadInput.value);
+if (!cantRes.ok) {
+  alert(`Cantidad (qq) ${cantRes.error}.`);
+  return;
+}
   // Datos nuevos ingresados
    const nuevosDatos = {
     placa: `C-${placaRaw}`,
@@ -244,7 +289,7 @@ form.addEventListener("submit", async (e) => {
     producto: productoSelect.value,
     bodega: bodegaSelect.value,
     tipo_unidad: tipoUnidadSelect.value,
-    cantidad_qq: parseInt(cantidadInput.value),
+    cantidad_qq: cantRes.valor,
     buque: buqueSelect.value,
     bl: blSelect.value,
     observacion: observacionInput.value.trim(),
@@ -327,3 +372,4 @@ document.addEventListener("DOMContentLoaded", cargarDatosOrden);
 
 
 document.addEventListener("DOMContentLoaded", cargarDatosOrden);
+
