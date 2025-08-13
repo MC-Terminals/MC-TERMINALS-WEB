@@ -278,30 +278,41 @@
 
     </div>
 
+<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+  <button id="btnImprimirMasivo" class="btn btn-primary" disabled>Imprimir Orden Masiva</button>
+  <span id="selInfo" class="ms-2 text-white-50"></span>
+</div>
+
+
+
     
     <div class="table-responsive">
       <table class="table table-bordered table-hover" id="miTabla">
-        <thead>
-          <tr>
-            <th>No. Orden</th>
-            <th>Fecha</th>
-            <th>Buque</th>
-            <th>Poliza</th>
-            <th>Empresa</th>
-            <th>Placa</th>
-            <th>Piloto</th>
-            <th>Producto</th>
-            <th>Bodega</th>
-            <th>Cant. (qq)</th>
-            <th>Cant. (ton)</th>
-            <th>Nombre Transporte</th>
-            <th>No. Orden Interna</th>
-            <th>Observación</th>
-            <th>Estatus</th>
-              <th>Bodega Externa</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
+     <thead>
+  <tr>
+    <th style="width:28px">
+      <input type="checkbox" id="checkAllPage">
+    </th>
+    <th>No. Orden</th>
+    <th>Fecha</th>
+    <th>Buque</th>
+    <th>Poliza</th>
+    <th>Empresa</th>
+    <th>Placa</th>
+    <th>Piloto</th>
+    <th>Producto</th>
+    <th>Bodega</th>
+    <th>Cant. (qq)</th>
+    <th>Cant. (ton)</th>
+    <th>Nombre Transporte</th>
+    <th>No. Orden Interna</th>
+    <th>Observación</th>
+    <th>Estatus</th>
+    <th>Bodega Externa</th>
+    <th>Acciones</th>
+  </tr>
+</thead>
+
         <tbody id="tablaOrdenes"></tbody>
       </table>
     </div>
