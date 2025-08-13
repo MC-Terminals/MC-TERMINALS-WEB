@@ -20,6 +20,78 @@ let buquesPorId = {};
 let paginaActual = 1;
 const ordenesPorPagina = 10;
 let ordenesFiltradas = [];
+// === Límite de selección para orden masiva ===
+const MAX_MASIVO = 25;
+
+
+// === Selección inteligente para impresión masiva ===
+const seleccionadas = new Set();        // no_orden seleccionadas
+let groupKey = null;                     // "buque|bl|producto"
+
+const fmtQQ  = new Intl.NumberFormat("es-GT",{ minimumFractionDigits:0, maximumFractionDigits:4 });
+const fmtTon = new Intl.NumberFormat("es-GT",{ minimumFractionDigits:2, maximumFractionDigits:2 });
+
+const keyFrom   = (o) => `${o.buque}|${o.bl}|${o.producto}`;
+const ordenById = (id) => ordenes.find(x => x.no_orden === id);
+
+function actualizarUISeleccion() {
+  const btn = document.getElementById("btnImprimirMasivo");
+  const selInfo = document.getElementById("selInfo");
+  if (btn) btn.disabled = seleccionadas.size === 0;
+  if (!selInfo) return;
+
+  if (!groupKey) {
+    selInfo.textContent = seleccionadas.size ? `(${seleccionadas.size} seleccionadas)` : "";
+    return;
+  }
+  const [b, bl, prod] = groupKey.split("|");
+  selInfo.innerHTML =
+    `<span class="badge bg-secondary">Agrupando</span>
+     <span class="ms-1">Buque: ${buquesPorId[b] || b}</span> |
+     <span>BL: ${bl}</span> |
+     <span>Producto: ${prod}</span> — ${seleccionadas.size} seleccionadas`;
+}
+
+
+function applyGroupLock() {
+  // deshabilita filas que no coinciden con la regla (sin tocar las ya marcadas)
+  tabla.querySelectorAll(".chkOrden").forEach(chk => {
+    const id = Number(chk.dataset.id);
+    const o  = ordenById(id);
+    const ok = !groupKey || keyFrom(o) === groupKey;
+    chk.disabled = !ok && !seleccionadas.has(id);
+    chk.closest("tr").classList.toggle("table-warning", !ok && !seleccionadas.has(id));
+  });
+  syncCheckAllPage();
+}
+
+function clearGroup() {
+  seleccionadas.clear();
+  groupKey = null;
+  const all = document.getElementById("checkAllPage");
+  if (all) all.checked = false;
+  actualizarUISeleccion();
+  applyGroupLock();
+}
+
+
+let warnTimer;
+function showWarn(msg) {
+  const el = document.getElementById("selInfo");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = "#ffc107";
+  clearTimeout(warnTimer);
+  warnTimer = setTimeout(() => { el.style.color = ""; actualizarUISeleccion(); }, 2000);
+}
+
+
+function syncCheckAllPage() {
+  const visibles = Array.from(tabla.querySelectorAll(".chkOrden")).filter(c => !c.disabled);
+  const all = document.getElementById("checkAllPage");
+  if (!all) return;
+  all.checked = visibles.length > 0 && visibles.every(c => c.checked);
+}
 
 
 
@@ -131,7 +203,9 @@ document.getElementById("contadorOrdenes").textContent =
   // Mostrar órdenes paginadas
   ordenesPaginadas.forEach(o => {
     const tr = document.createElement("tr");
+    const checked = seleccionadas.has(o.no_orden) ? "checked" : "";
     tr.innerHTML = `
+    <td><input type="checkbox" class="chkOrden" data-id="${o.no_orden}" ${checked}></td>
       <td>${o.no_orden}</td>
       <td>${new Date(o.fecha_generada).toLocaleString()}</td>
       <td>${buquesPorId[o.buque] || o.buque}</td>
@@ -156,7 +230,87 @@ document.getElementById("contadorOrdenes").textContent =
   // Actualizar estado de botones
   document.getElementById("btnAnterior").disabled = paginaActual === 1;
   document.getElementById("btnSiguiente").disabled = finPagina >= ordenesFiltradas.length;
+
+  // === Listeners de checks por fila ===
+tabla.querySelectorAll(".chkOrden").forEach(chk => {
+  chk.addEventListener("change", (e) => {
+    const id = Number(e.target.dataset.id);
+    const o  = ordenById(id);
+
+    if (e.target.checked) {
+      // Límite 25
+      if (seleccionadas.size >= MAX_MASIVO && !seleccionadas.has(id)) {
+        e.target.checked = false;
+        showWarn(`Máximo permitido: ${MAX_MASIVO} unidades por orden masiva.`);
+        return;
+      }
+      // Primera selección fija la regla
+      if (!groupKey) groupKey = keyFrom(o);
+      if (keyFrom(o) !== groupKey) {
+        e.target.checked = false;
+        showWarn("Solo puedes agrupar órdenes con el MISMO buque, BL y producto.");
+        return;
+      }
+      seleccionadas.add(id);
+    } else {
+      seleccionadas.delete(id);
+      if (seleccionadas.size === 0) groupKey = null;
+    }
+
+    actualizarUISeleccion();
+    applyGroupLock();
+  });
+});
+
+
+// === Checkbox maestro: seleccionar/deseleccionar TODAS las FILTRADAS (respetando la regla y el límite) ===
+const checkAllPage = document.getElementById("checkAllPage");
+if (checkAllPage) {
+  checkAllPage.onclick = () => {
+    if (checkAllPage.checked) {
+      // Si no hay regla, la fijamos con la primera orden filtrada
+      if (!groupKey && ordenesFiltradas.length) {
+        groupKey = keyFrom(ordenesFiltradas[0]);
+      }
+      // Tomar todas las filtradas que cumplan la regla
+      const candidatas = ordenesFiltradas.filter(o => keyFrom(o) === groupKey);
+      if (candidatas.length > MAX_MASIVO) {
+        showWarn(`Se seleccionarán solo ${MAX_MASIVO} (límite por orden).`);
+      }
+      // Rellenar hasta el límite, manteniendo las ya marcadas
+      const ya = new Set(seleccionadas);
+      seleccionadas.clear();
+      // Primero conserva las ya seleccionadas (que cumplan la regla)
+      Array.from(ya).forEach(id => {
+        const o = ordenById(id);
+        if (o && keyFrom(o) === groupKey && seleccionadas.size < MAX_MASIVO) {
+          seleccionadas.add(id);
+        }
+      });
+      // Luego agrega más de las filtradas hasta llegar al tope
+      for (const o of candidatas) {
+        if (seleccionadas.size >= MAX_MASIVO) break;
+        seleccionadas.add(o.no_orden);
+      }
+    } else {
+      clearGroup();
+    }
+    // Re-pintar para reflejar checks en la página actual y las otras
+    mostrarOrdenes();
+  };
 }
+
+
+// aplicar bloqueo/estilos y actualizar badge
+applyGroupLock();
+actualizarUISeleccion();
+}
+
+
+
+// (puedes dejar aquí tus dos líneas de paginación si quieres)
+// document.getElementById("btnAnterior").disabled = paginaActual === 1;
+// document.getElementById("btnSiguiente").disabled = finPagina >= ordenesFiltradas.length;
 
 
 async function imprimirOrden(no_orden) {
@@ -248,6 +402,123 @@ async function imprimirOrden(no_orden) {
   `);
   ventana.document.close();
 }
+
+async function imprimirOrdenMasiva() {
+  if (seleccionadas.size === 0) return;
+
+  const ids   = Array.from(seleccionadas);
+  const lista = ids.map(ordenById).filter(Boolean);
+
+  // Validación de regla y límite
+  const gk = keyFrom(lista[0]);
+  if (lista.some(o => keyFrom(o) !== gk)) {
+    showWarn("Selección inválida. Limpia y vuelve a seleccionar (mismo buque/BL/producto).");
+    return;
+  }
+  if (lista.length > MAX_MASIVO) {
+    showWarn(`Máximo permitido: ${MAX_MASIVO} unidades por orden masiva.`);
+    return;
+  }
+
+  const { buque, bl, producto, nit_usuario } = lista[0];
+  const empresaNombre = (empresasPorNit[nit_usuario] || "Empresa Desconocida");
+  const buqueNombre   = buquesPorId[buque] || buque;
+
+  // Totales
+  const totalQQ  = lista.reduce((a, o) => a + Number(o.cantidad_qq || 0), 0);
+  const totalTon = lista.reduce((a, o) => a + Number(
+    o.cantidad_ton != null ? o.cantidad_ton : (o.cantidad_qq || 0) / 22.046
+  ), 0);
+
+  // Ordenar por piloto, luego placa
+  lista.sort((a, b) => (a.piloto || "").localeCompare(b.piloto || "") || (a.placa || "").localeCompare(b.placa || ""));
+
+  // Auto-escala para una hoja A4
+  const n = lista.length;
+  const fs      = n <= 14 ? 12 : n <= 18 ? 11 : n <= 22 ? 10 : 9;      // px
+  const padCell = n <= 14 ? 6  : n <= 18 ? 5  : n <= 22 ? 4  : 3;      // px
+  const h2Size  = n <= 18 ? 16 : 14;                                  // título
+  const metaFS  = n <= 18 ? 12 : 11;
+
+  const win = window.open("", "_blank");
+  win.document.write(`
+    <html>
+      <head>
+        <title>Orden Masiva (${lista.length} unidades)</title>
+        <style>
+          @media print { @page { size: A4 portrait; margin: 10mm; } }
+          body { font-family: Arial, sans-serif; color: #000; font-size: ${fs}px; }
+          .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+          .logo { width:110px; }
+          h2 { text-align:center; margin: 6px 0 10px; font-size:${h2Size}px; }
+          table { width:100%; border-collapse:collapse; }
+          th, td { border:1px solid #000; padding:${padCell}px ${Math.max(3,padCell-1)}px; text-align:left; }
+          th { background:#f2f2f2; }
+          .totales { margin-top:8px; text-align:right; }
+          .meta { font-size:${metaFS}px; }
+          .meta td { padding:2px 0; border:none; }
+          .nowrap { white-space:nowrap; }
+        </style>
+      </head>
+      <body onload="setTimeout(() => window.print(), 300)">
+        <div class="header">
+          <div>
+            <div><strong>${empresaNombre}</strong></div>
+            <table class="meta">
+              <tr><td><strong>Buque:</strong> ${buqueNombre}</td></tr>
+              <tr><td><strong>BL:</strong> ${bl}</td></tr>
+              <tr><td><strong>Producto:</strong> ${producto}</td></tr>
+              <tr><td><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-GT')}</td></tr>
+            </table>
+          </div>
+          <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" class="logo" />
+        </div>
+
+        <h2>ORDEN DE CARGA (MASIVA)</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">#</th>
+              <th class="nowrap">No. Orden</th>
+              <th>Piloto</th>
+              <th class="nowrap">Placa</th>
+              <th>Nombre Transporte</th>
+              <th class="nowrap">No. Orden Interna</th>
+              <th class="nowrap">Cantidad (qq)</th>
+              <th class="nowrap">Cantidad (ton)</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lista.map((o, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${o.no_orden}</td>
+                <td>${o.piloto || ""}</td>
+                <td>${o.placa || ""}</td>
+                <td>${o.nombre_transporte || ""}</td>
+                <td>${o.no_orden_interna || ""}</td>
+                <td>${fmtQQ.format(Number(o.cantidad_qq || 0))}</td>
+                <td>${fmtTon.format(Number(o.cantidad_ton != null ? o.cantidad_ton : (o.cantidad_qq || 0) / 22.046))}</td>
+                <td>${o.observacion || ""}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+
+        <div class="totales">
+          <div><strong>Unidades:</strong> ${lista.length}</div>
+          <div><strong>Total Cantidad (qq):</strong> ${fmtQQ.format(totalQQ)}</div>
+          <div><strong>Total Cantidad (ton):</strong> ${fmtTon.format(totalTon)}</div>
+        </div>
+      </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+
 
 function formatearFecha(fecha) {
   if (!fecha) return "";
@@ -390,6 +661,9 @@ function limpiarFiltros() {
   filtroBodegaExterna.value = "";
   filtroEmpresa.value = "";
 
+   clearGroup();                              // 👈 limpia selección global
+  const all = document.getElementById("checkAllPage");
+  if (all) all.checked = false;              // 👈 desmarca el maestro
   
  const hoy = new Date().toLocaleDateString('fr-CA'); // Formato YYYY-MM-DD
   filtroInicio.value = hoy;
@@ -429,6 +703,12 @@ document.getElementById("btnSiguiente").addEventListener("click", () => {
     mostrarOrdenes();
   }
 });
+
+const btnMasivo = document.getElementById("btnImprimirMasivo");
+if (btnMasivo) btnMasivo.addEventListener("click", imprimirOrdenMasiva);
+
+
+
 
 
   if (!localStorage.getItem("nit")) {
