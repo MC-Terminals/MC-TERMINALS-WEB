@@ -503,18 +503,37 @@ if (errores.length > 0) {
   return;
 }
 
-  const { error } = await supabase.from("ordenes").insert(ordenes);
+  // INSERTA y DEVUELVE los no_orden creados
+  const { data: insertadas, error } = await supabase
+    .from("ordenes")
+    .insert(ordenes)
+    .select("no_orden"); // 👈 importante para recibir los IDs creados
+
   if (error) {
     console.error(error);
     mensaje.innerText = "❌ Error al crear las órdenes.";
     mensaje.style.color = "red";
-  } else {
-    mensaje.innerText = "✅ Órdenes creadas exitosamente.";
-    mensaje.style.color = "lightgreen";
-    setTimeout(() => {
-      window.location.href = "menu.html";
-    }, 2000);
+    return;
   }
+
+  const ids = (insertadas || []).map(r => r.no_orden);
+
+  // Mensaje y pregunta
+  mensaje.style.color = "lightgreen";
+  mensaje.innerText = `✅ Órdenes creadas exitosamente (${ids.length}).`;
+
+  // Pregunta si desea descargar el PDF de órdenes individuales
+  const deseaPDF = confirm("¿Desea descargar el PDF con las órdenes individuales?");
+
+  if (deseaPDF && ids.length) {
+    // Redirige a la página que arma el PDF (una hoja por orden)
+    const qs = encodeURIComponent(ids.join(","));
+    window.location.href = `imprimir_individuales.html?ids=${qs}`;
+  } else {
+    // Si no quiere PDF, se regresa al menú
+    window.location.href = "menu.html";
+  }
+
 }
 
 
@@ -527,5 +546,3 @@ if (!localStorage.getItem("nit")) {
 
 </body>
 </html>
-
-
