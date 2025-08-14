@@ -377,120 +377,194 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function cargarBuques() {
-  let buques = [];
-
-  if (rol === "consignatario") {
-    // Buscar BLs que tengan ese NIT y extraer ID de buques únicos
-    const { data: blsData } = await supabase
-      .from("bls_producto")
-      .select("id_producto_buque, nit_empresa, bl")
-      .eq("nit_empresa", nit_usuario);
-
-    const idsProducto = [...new Set(blsData.map(bl => bl.id_producto_buque))];
-    const { data: productosData } = await supabase
-      .from("productos_buque")
-      .select("id, id_buque, producto")
-      .in("id", idsProducto);
-
-    const idsBuques = [...new Set(productosData.map(p => p.id_buque))];
-
-    const { data: buquesData } = await supabase
-      .from("buques")
-      .select("id, nombre")
-      .in("id", idsBuques);
-
-    buques = buquesData;
-  } else {
-    const { data } = await supabase.from("buques").select("id, nombre");
-    buques = data;
-  }
-
   const selectBuque = document.getElementById("buque");
-  buques.forEach(b => {
-    const opt = document.createElement("option");
-    opt.value = b.id;
-    opt.textContent = b.nombre;
-    selectBuque.appendChild(opt);
-  });
+  const blSelect = document.getElementById("bl");
+  const productoSelect = document.getElementById("producto");
+
+  // Estado inicial
+  selectBuque.innerHTML   = `<option value="">Seleccione un buque...</option>`;
+  blSelect.innerHTML      = `<option value="">Seleccione una poliza...</option>`;
+  productoSelect.innerHTML= `<option value="">Seleccione un producto...</option>`;
+  selectBuque.disabled = false;
+  blSelect.disabled = true;
+  productoSelect.disabled = true;
+
+  try {
+    let buques = [];
+
+    if (rol === "consignatario") {
+      // 1) Traer BLs del NIT actual
+      const { data: blsData, error: e1 } = await supabase
+        .from("bls_producto")
+        .select("id_producto_buque")
+        .eq("nit_empresa", nit_usuario);
+
+      if (e1) throw e1;
+
+      const idsProducto = [...new Set((blsData || []).map(b => b.id_producto_buque))];
+
+      if (idsProducto.length === 0) {
+        // No tiene BLs: bloquear combos dependientes
+        selectBuque.disabled = true;
+        blSelect.disabled = true;
+        productoSelect.disabled = true;
+        mensaje.textContent = "No tiene pólizas (BL) asignadas.";
+        mensaje.style.color = "orange";
+        return;
+      }
+
+      // 2) A partir de esos productos, obtener buques
+      const { data: productosData, error: e2 } = await supabase
+        .from("productos_buque")
+        .select("id, id_buque")
+        .in("id", idsProducto);
+
+      if (e2) throw e2;
+
+      const idsBuques = [...new Set((productosData || []).map(p => p.id_buque))];
+
+      if (idsBuques.length === 0) {
+        selectBuque.disabled = true;
+        blSelect.disabled = true;
+        productoSelect.disabled = true;
+        mensaje.textContent = "No hay buques disponibles para sus BL.";
+        mensaje.style.color = "orange";
+        return;
+      }
+
+      const { data: buquesData, error: e3 } = await supabase
+        .from("buques")
+        .select("id, nombre")
+        .in("id", idsBuques)
+        .order("nombre", { ascending: true });
+
+      if (e3) throw e3;
+      buques = buquesData || [];
+    } else {
+      // Admin/operador: todos los buques
+      const { data, error } = await supabase
+        .from("buques")
+        .select("id, nombre")
+        .order("nombre", { ascending: true });
+      if (error) throw error;
+      buques = data || [];
+    }
+
+    // Pintar opciones
+    buques.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.id;
+      opt.textContent = b.nombre;
+      selectBuque.appendChild(opt);
+    });
+
+    // Habilitar BL al menos cuando se elige buque
+    blSelect.disabled = false;
+  } catch (err) {
+    console.error("Error cargando buques:", err);
+    mensaje.textContent = "Error cargando buques.";
+    mensaje.style.color = "orange";
+  }
 }
+
 
 async function mostrarBLsDelBuque() {
   const buqueId = document.getElementById("buque").value;
-
-  if (!buqueId || buqueId.length < 36 || !buqueId.includes("-")) {
-    console.warn("ID de buque inválido o vacío:", buqueId);
-
-    // Reiniciar ambos campos
-    document.getElementById("bl").innerHTML = `<option value="">Seleccione una poliza...</option>`;
-    document.getElementById("producto").innerHTML = `<option value="">Seleccione un producto...</option>`;
-    document.getElementById("producto").disabled = false; // desbloquear si había estado bloqueado antes
-    return;
-  }
-
-  const { data: productos, error: errorProd } = await supabase
-    .from("productos_buque")
-    .select("id, producto")
-    .eq("id_buque", buqueId);
-
-  if (errorProd || !productos) {
-    console.error("Error al obtener productos del buque:", errorProd);
-    return;
-  }
-
-  const idsProducto = productos.map(p => p.id);
-
-  const { data: bls, error: errorBls } = await supabase
-    .from("bls_producto")
-    .select("bl, id_producto_buque")
-    .in("id_producto_buque", idsProducto);
-
-  if (errorBls || !bls) {
-    console.error("Error al obtener poliza:", errorBls);
-    return;
-  }
-
-  // Guardamos relación BL ↔ producto
-  todosBLs = bls.map(bl => ({
-    ...bl,
-    producto: productos.find(p => p.id === bl.id_producto_buque)?.producto || ""
-  }));
-
-  // Reiniciar campos
   const blSelect = document.getElementById("bl");
   const productoSelect = document.getElementById("producto");
+
+  // Reset dependientes
   blSelect.innerHTML = `<option value="">Seleccione una poliza...</option>`;
   productoSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
-  productoSelect.disabled = false; // 🔓 Habilita al cambiar buque
+  productoSelect.disabled = true;
 
-  // Rellenar los BLs válidos
-  todosBLs.forEach(b => {
-    const opt = document.createElement("option");
-    opt.value = b.bl;
-    opt.textContent = b.bl;
-    blSelect.appendChild(opt);
-  });
+  if (!buqueId) {
+    blSelect.disabled = true;
+    return;
+  }
+
+  try {
+    // 1) Productos del buque elegido
+    const { data: productos, error: eProd } = await supabase
+      .from("productos_buque")
+      .select("id, producto")
+      .eq("id_buque", buqueId);
+
+    if (eProd) throw eProd;
+
+    const idsProducto = (productos || []).map(p => p.id);
+    if (idsProducto.length === 0) {
+      blSelect.disabled = true;
+      mensaje.textContent = "Este buque no tiene productos disponibles.";
+      mensaje.style.color = "orange";
+      return;
+    }
+
+    // 2) BLs para esos productos
+    let query = supabase
+      .from("bls_producto")
+      .select("bl, id_producto_buque, nit_empresa")
+      .in("id_producto_buque", idsProducto);
+
+    // Filtrado clave: solo BL del consignatario
+    if (rol === "consignatario") {
+      query = query.eq("nit_empresa", nit_usuario);
+    }
+
+    const { data: bls, error: eBL } = await query;
+    if (eBL) throw eBL;
+
+    // Guardar relación BL ↔ producto para autocompletar
+    todosBLs = (bls || []).map(b => ({
+      bl: b.bl,
+      id_producto_buque: b.id_producto_buque,
+      producto: (productos.find(p => p.id === b.id_producto_buque) || {}).producto || ""
+    }));
+
+    // Si no hay BLs válidos para este NIT, informar y bloquear
+    if (rol === "consignatario" && todosBLs.length === 0) {
+      blSelect.disabled = true;
+      mensaje.textContent = "Este buque no tiene pólizas (BL) asignadas a su empresa.";
+      mensaje.style.color = "orange";
+      return;
+    }
+
+    // 3) Pintar BLs
+    blSelect.disabled = false;
+    todosBLs.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.bl;
+      opt.textContent = b.bl;
+      blSelect.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("Error listando BL:", err);
+    mensaje.textContent = "Error cargando pólizas.";
+    mensaje.style.color = "orange";
+  }
 }
+
 
 
 
 function mostrarProductoDelBL() {
   const blSeleccionado = document.getElementById("bl").value;
-  const producto = todosBLs.find(b => b.bl === blSeleccionado)?.producto;
-
   const prodSelect = document.getElementById("producto");
-  prodSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
 
+  prodSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
+  prodSelect.disabled = true;
+
+  const producto = todosBLs.find(b => b.bl === blSeleccionado)?.producto;
   if (producto) {
     const opt = document.createElement("option");
     opt.value = producto;
     opt.textContent = producto;
     prodSelect.appendChild(opt);
     prodSelect.value = producto;
+    prodSelect.disabled = true; // bloqueado para que no lo cambien
   }
-
-  // 🔒 Deshabilitar para que no se cambie manualmente
-  prodSelect.disabled = true;
 }
+
 
   // === NUEVO: validación de placa (input) ===
   const placaInput = document.getElementById("placa");
