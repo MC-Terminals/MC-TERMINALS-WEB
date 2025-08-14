@@ -174,82 +174,130 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function cargarBuques() {
-  let buques = [];
+  try {
+    const selectBuque = document.getElementById("buque");
+    selectBuque.innerHTML = `<option value="">Seleccione un buque...</option>`;
 
-  if (rol === "consignatario") {
-    const { data: blsData } = await supabase
-      .from("bls_producto")
-      .select("id_producto_buque, nit_empresa")
-      .eq("nit_empresa", nit);
+    let buques = [];
 
-    const idsProducto = [...new Set(blsData.map(bl => bl.id_producto_buque))];
-    const { data: productosData } = await supabase
-      .from("productos_buque")
-      .select("id, id_buque")
-      .in("id", idsProducto);
+    if (rol === "consignatario") {
+      // 1. Obtener IDs de productos asociados al consignatario
+      const { data: blsData, error: blsError } = await supabase
+        .from("bls_producto")
+        .select("id_producto_buque")
+        .eq("nit_empresa", nit);
 
-    const idsBuques = [...new Set(productosData.map(p => p.id_buque))];
-    const { data: buquesData } = await supabase
-      .from("buques")
-      .select("id, nombre")
-      .in("id", idsBuques);
+      if (blsError) throw blsError;
+      if (!blsData.length) return; // No hay buques para mostrar
 
-    buques = buquesData;
-  } else {
-    const { data } = await supabase.from("buques").select("id, nombre");
-    buques = data;
+      const idsProducto = [...new Set(blsData.map(bl => bl.id_producto_buque))];
+
+      // 2. Obtener IDs de buques desde productos
+      const { data: productosData, error: productosError } = await supabase
+        .from("productos_buque")
+        .select("id_buque")
+        .in("id", idsProducto);
+
+      if (productosError) throw productosError;
+
+      const idsBuques = [...new Set(productosData.map(p => p.id_buque))];
+
+      // 3. Obtener datos de los buques
+      const { data: buquesData, error: buquesError } = await supabase
+        .from("buques")
+        .select("id, nombre")
+        .in("id", idsBuques);
+
+      if (buquesError) throw buquesError;
+
+      buques = buquesData || [];
+    } 
+    else {
+      // Roles con acceso a todos los buques
+      const { data, error } = await supabase
+        .from("buques")
+        .select("id, nombre");
+
+      if (error) throw error;
+      buques = data || [];
+    }
+
+    // 4. Llenar el select
+    buques.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.id;
+      opt.textContent = b.nombre;
+      selectBuque.appendChild(opt);
+    });
+
+  } catch (error) {
+    console.error("Error cargando buques:", error.message);
   }
-
-  const selectBuque = document.getElementById("buque");
-  selectBuque.innerHTML = `<option value="">Seleccione un buque...</option>`;
-  buques.forEach(b => {
-    const opt = document.createElement("option");
-    opt.value = b.id;
-    opt.textContent = b.nombre;
-    selectBuque.appendChild(opt);
-  });
 }
+
+
 
 async function mostrarBLsDelBuque() {
   const buqueId = document.getElementById("buque").value;
 
-  if (!buqueId || buqueId.length < 36 || !buqueId.includes("-")) {
+  // Reset si no hay buque válido
+  if (!buqueId) {
     document.getElementById("bl").innerHTML = `<option value="">Seleccione una poliza...</option>`;
     document.getElementById("producto").innerHTML = `<option value="">Seleccione un producto...</option>`;
     document.getElementById("producto").disabled = false;
+    todosBLs = [];
     return;
   }
 
-  const { data: productos } = await supabase
+  // Productos del buque
+  const { data: productos, error: errorProd } = await supabase
     .from("productos_buque")
     .select("id, producto")
     .eq("id_buque", buqueId);
 
+  if (errorProd || !productos || !productos.length) {
+    document.getElementById("bl").innerHTML = `<option value="">Seleccione una poliza...</option>`;
+    document.getElementById("producto").innerHTML = `<option value="">Seleccione un producto...</option>`;
+    document.getElementById("producto").disabled = false;
+    todosBLs = [];
+    return;
+  }
+
   const idsProducto = productos.map(p => p.id);
 
-  const { data: bls } = await supabase
+  // BLs del buque **filtrados por consignatario si aplica**
+  let query = supabase
     .from("bls_producto")
-    .select("bl, id_producto_buque")
+    .select("bl, id_producto_buque, nit_empresa")
     .in("id_producto_buque", idsProducto);
 
-  todosBLs = bls.map(bl => ({
+  if (rol === "consignatario") {
+    query = query.eq("nit_empresa", nit); // ← filtro clave
+  }
+
+  const { data: bls, error: errorBls } = await query;
+
+  // Armar relación BL ↔ producto
+  todosBLs = (bls || []).map(bl => ({
     ...bl,
     producto: productos.find(p => p.id === bl.id_producto_buque)?.producto || ""
   }));
 
+  // Poblar selects
   const blSelect = document.getElementById("bl");
   const productoSelect = document.getElementById("producto");
   blSelect.innerHTML = `<option value="">Seleccione una poliza...</option>`;
   productoSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
   productoSelect.disabled = false;
 
-  todosBLs.forEach(b => {
+  (todosBLs || []).forEach(b => {
     const opt = document.createElement("option");
     opt.value = b.bl;
     opt.textContent = b.bl;
     blSelect.appendChild(opt);
   });
 }
+
 
 function mostrarProductoDelBL() {
   const blSeleccionado = document.getElementById("bl").value;
