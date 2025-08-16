@@ -184,35 +184,35 @@
   });
 
   // Cambiar Email
-  async function cambiarEmail(nit) {
-    // Traer email actual para sugerir
-    const user = usuarios.find(u => u.nit === nit);
-    const actual = user?.email || "";
+async function cambiarEmail(nit) {
+  const user = usuarios.find(u => u.nit === nit);
+  const actual = user?.email || "";
 
-    const nuevo = prompt("Nuevo email (deja vacío para eliminar):", actual).trim();
-    if (nuevo === null) return; // canceló
+  const resp = prompt("Nuevo email (deja vacío para eliminar):", actual);
+  if (resp === null) return;           // canceló
+  const nuevo = resp.trim();
 
-    // Validación sencilla de email (si no está vacío)
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    const valor = nuevo === "" ? null : nuevo;
-    if (valor && !emailRegex.test(valor)) {
-      alert("Ingrese un correo válido (ej: usuario@empresa.com).");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("usuarios")
-      .update({ email: valor })
-      .eq("nit", nit);
-
-    if (error) {
-      console.error(error);
-      alert("No se pudo actualizar el email.");
-    } else {
-      alert(valor ? "Email actualizado." : "Email eliminado.");
-      cargarUsuarios();
-    }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const valor = nuevo === "" ? null : nuevo;
+  if (valor && !emailRegex.test(valor)) {
+    alert("Ingrese un correo válido (ej: usuario@empresa.com).");
+    return;
   }
+
+  const { error } = await supabase
+    .from("usuarios")
+    .update({ email: valor })
+    .eq("nit", nit);
+
+  if (error) {
+    console.error(error);
+    alert("No se pudo actualizar el email.");
+  } else {
+    alert(valor ? "Email actualizado." : "Email eliminado.");
+    cargarUsuarios();
+  }
+}
+
 
   // Reset + compartir (genera temporal y envía)
   async function resetYCompartir(nit) {
