@@ -5,83 +5,25 @@
   <title>Gestión de Usuarios | MC Terminals</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
- <style>
-  body {
-    background: #0e0e2c;
-    color: white;
-    font-family: 'Segoe UI', sans-serif;
-  }
-
-  .card {
-    position: relative;
-    background: #1b1b3a;
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 0 20px #3f3f91;
-    padding: 20px;
-  }
-
-  .btn-action {
-    font-size: 0.9rem;
-    margin: 2px;
-  }
-
-  .form-control, .form-select {
-    background-color: #2c2c4a;
-    color: white;
-    border: none;
-  }
-
-  .form-control::placeholder {
-    color: #bbb;
-  }
-
-  .form-label {
-    color: white;
-  }
-
-  .table {
-    color: white;
-  }
-
-  .logo-superior {
-    text-align: end;
-    margin-bottom: 10px;
-  }
-
-  .logo-img {
-    width: 80px;
-    height: auto;
-  }
-
-  @media (max-width: 768px) {
-   .logo-superior {
-      position: absolute;
-      top: 20px;
-      right: 10px;
+  <style>
+    body{background:#0e0e2c;color:#fff;font-family:'Segoe UI',sans-serif}
+    .card{position:relative;background:#1b1b3a;border:none;border-radius:20px;box-shadow:0 0 20px #3f3f91;padding:20px}
+    .btn-action{font-size:.9rem;margin:2px}
+    .form-control,.form-select{background:#2c2c4a;color:#fff;border:none}
+    .form-control::placeholder{color:#bbb}
+    .form-label{color:#fff}
+    .table{color:#fff}
+    .logo-superior{text-align:end;margin-bottom:10px}
+    .logo-img{width:80px;height:auto}
+    @media (max-width:768px){
+      .logo-superior{position:absolute;top:20px;right:10px}
+      .logo-img{width:60px}
+      h2.text-white{text-align:center;font-size:1.4rem}
+      .row.mb-3 .col-md-6{margin-bottom:15px}
+      .btn-action{display:block;width:100%;margin:3px 0}
     }
-
-    .logo-img {
-      width: 60px;
-    }
-
-    h2.text-white {
-      text-align: center;
-      font-size: 1.4rem;
-    }
-
-    .row.mb-3 .col-md-6 {
-      margin-bottom: 15px;
-    }
-
-    .btn-action {
-      display: block;
-      width: 100%;
-      margin: 3px 0;
-    }
-  }
-</style>
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  </style>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
 <div class="container mt-4">
@@ -90,6 +32,7 @@
       <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" class="logo-img" alt="Logo MC">
     </div>
     <h2 class="text-white">Gestión de Usuarios</h2>
+
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Buscar por NIT:</label>
@@ -108,7 +51,8 @@
             <th>NIT</th>
             <th>Empresa</th>
             <th>Rol</th>
-            <th>Acciones</th>
+            <th>Email</th>
+            <th style="min-width:420px">Acciones</th>
           </tr>
         </thead>
         <tbody id="tablaUsuarios"></tbody>
@@ -117,20 +61,21 @@
   </div>
 </div>
 
+<!-- Modal: Cambiar rol -->
 <div class="modal fade" id="modalRol" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <div class="modal-content text-dark">
       <div class="modal-header">
         <h5 class="modal-title">Asignar nuevo rol</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <select id="nuevoRol" class="form-select">
           <option value="">Seleccione un rol</option>
-          <option value="admin">Administrador</option>
-          <option value="bascula">Báscula</option>
-          <option value="cheque">Cheque</option>
-          <option value="consignatario">Consignatario</option>
+          <option value="admin">admin</option>
+          <option value="bascula">bascula</option>
+          <option value="cheque">cheque</option>
+          <option value="consignatario">consignatario</option>
           <option value="operador_externo">operador_externo</option>
         </select>
       </div>
@@ -140,115 +85,93 @@
     </div>
   </div>
 </div>
+
 <div class="text-center mt-4">
   <button class="btn btn-outline-light" onclick="window.location.href='menu.html'">Regresar al Menú</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const supabase = window.supabase.createClient(
-  'https://fpqnzqrdyxmhptosplos.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c'
-);
-
-let usuarios = [];
-let usuarioActual = null;
-const tabla = document.getElementById("tablaUsuarios");
-const modalRol = new bootstrap.Modal(document.getElementById("modalRol"));
-const nuevoRol = document.getElementById("nuevoRol");
-
-async function compartirUsuario(nit) {
-  const usuario = usuarios.find(u => u.nit === nit);
-  if (!usuario) {
-    alert("Usuario no encontrado.");
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from("usuarios")
-    .select("contraseña")
-    .eq("nit", nit)
-    .single();
-
-  if (error || !data) {
-    alert("No se pudo obtener la contraseña del usuario.");
-    return;
-  }
-
-  const asunto = encodeURIComponent("Usuario de órdenes de carga | MC Terminals");
-  const cuerpo = encodeURIComponent(
-`Bienvenido/a al sistema de órdenes de carga de MC Terminals.
-
-🔐 Usuario (NIT): ${usuario.nit}
-🔑 Contraseña: ${data.contraseña}
-
-Con este acceso podrás:
-
-📦 Generar órdenes de carga
-📊 Consultar estados y turnos
-📁 Descargar reportes y más
-
-Accede desde cualquier navegador aquí:
-🌐 https://mc-terminals.github.io/MC-TERMINALS-WEB
-
-Gracias por usar nuestros servicios.
--- Equipo MC Terminals`
+  // Supabase
+  const supabase = window.supabase.createClient(
+    'https://fpqnzqrdyxmhptosplos.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c'
   );
 
-  window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
-}
+  let usuarios = [];
+  let usuarioActual = null;
+  const tabla = document.getElementById("tablaUsuarios");
+  const modalRol = new bootstrap.Modal(document.getElementById("modalRol"));
+  const nuevoRol = document.getElementById("nuevoRol");
 
-
-async function cargarUsuarios() {
-  const { data, error } = await supabase.from("usuarios").select("nit, empresa, rol");
-  if (error) {
-    console.error("Error al cargar usuarios", error);
-    alert("No se pudieron cargar los usuarios.");
-    return;
+  // Utilidad: contraseña temporal
+  function genTemp(len = 8) {
+    const abc = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    return Array.from({length: len}, () => abc[Math.floor(Math.random()*abc.length)]).join("");
   }
-  usuarios = data || [];
-  mostrarUsuarios();
-}
 
-function mostrarUsuarios() {
-  const nit = document.getElementById("filtroNIT").value.toLowerCase();
-  const empresa = document.getElementById("filtroEmpresa").value.toLowerCase();
-  tabla.innerHTML = "";
+  // Cargar usuarios
+  async function cargarUsuarios() {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("nit, empresa, rol, email, must_change_password")
+      .order("empresa", { ascending: true });
 
-  usuarios.filter(u =>
-    u.nit.toLowerCase().includes(nit) &&
-    u.empresa.toLowerCase().includes(empresa)
-  ).forEach(u => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-  <td>${u.nit}</td>
-  <td>${u.empresa}</td>
-  <td>${u.rol}</td>
-  <td>
-    <button class="btn btn-sm btn-warning btn-action" onclick="abrirModalRol('${u.nit}')">Asignar Rol</button>
-    <button class="btn btn-sm btn-danger btn-action" onclick="eliminarUsuario('${u.nit}')">Eliminar</button>
-    <button class="btn btn-sm btn-info btn-action" onclick="cambiarContrasena('${u.nit}')">Cambiar Contraseña</button>
-    <button class="btn btn-sm btn-primary btn-action" onclick="compartirUsuario('${u.nit}')">Compartir</button>
-  </td>
-`;
-    tabla.appendChild(tr);
-  });
-}
+    if (error) { console.error(error); return; }
 
+    usuarios = data || [];
+    mostrarUsuarios();
+  }
 
-function abrirModalRol(nit) {
-  usuarioActual = nit;
-  nuevoRol.value = "";
-  modalRol.show();
-}
+  // Pintar tabla (con filtros)
+  function mostrarUsuarios() {
+    const fNit = (document.getElementById("filtroNIT").value || "").toLowerCase();
+    const fEmp = (document.getElementById("filtroEmpresa").value || "").toLowerCase();
+    tabla.innerHTML = "";
 
-document.getElementById("confirmarRol").addEventListener("click", async () => {
-  if (nuevoRol.value && usuarioActual) {
+    usuarios
+      .filter(u =>
+        String(u.nit).toLowerCase().includes(fNit) &&
+        String(u.empresa).toLowerCase().includes(fEmp)
+      )
+      .forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.nit}</td>
+          <td>${u.empresa}</td>
+          <td>${u.rol}</td>
+          <td>${u.email ?? "-"}</td>
+          <td>
+            <button class="btn btn-sm btn-warning btn-action" onclick="abrirModalRol('${u.nit}')">Asignar Rol</button>
+            <button class="btn btn-sm btn-info btn-action" onclick="cambiarEmail('${u.nit}')">Cambiar Email</button>
+            <button class="btn btn-sm btn-primary btn-action" onclick="resetYCompartir('${u.nit}')">Reset & Compartir</button>
+            <button class="btn btn-sm btn-secondary btn-action" onclick="cambiarContrasena('${u.nit}')">Cambiar Contraseña</button>
+            <button class="btn btn-sm btn-danger btn-action" onclick="eliminarUsuario('${u.nit}')">Eliminar</button>
+          </td>`;
+        tabla.appendChild(tr);
+      });
+  }
+
+  // Filtros
+  document.getElementById("filtroNIT").addEventListener("input", mostrarUsuarios);
+  document.getElementById("filtroEmpresa").addEventListener("input", mostrarUsuarios);
+
+  // Abrir modal de rol
+  function abrirModalRol(nit) {
+    usuarioActual = nit;
+    nuevoRol.value = "";
+    modalRol.show();
+  }
+
+  // Confirmar rol
+  document.getElementById("confirmarRol").addEventListener("click", async () => {
+    if (!usuarioActual || !nuevoRol.value) return;
+
     const { error } = await supabase
       .from("usuarios")
       .update({ rol: nuevoRol.value })
-      .eq("nit", usuarioActual.toString());
+      .eq("nit", usuarioActual);
 
     if (error) {
       console.error("Error al asignar rol:", error);
@@ -258,68 +181,121 @@ document.getElementById("confirmarRol").addEventListener("click", async () => {
       alert("Rol asignado correctamente.");
       cargarUsuarios();
     }
-  }
-});
+  });
 
-async function eliminarUsuario(nit) {
-  const confirmar = confirm(`¿Estás seguro de eliminar al usuario con NIT ${nit}?`);
-  if (!confirmar) return;
+  // Cambiar Email
+  async function cambiarEmail(nit) {
+    // Traer email actual para sugerir
+    const user = usuarios.find(u => u.nit === nit);
+    const actual = user?.email || "";
 
-  const { error } = await supabase.from("usuarios").delete().eq("nit", nit.toString());
-  if (error) {
-    console.error("Error al eliminar usuario:", error);
-    alert("No se pudo eliminar el usuario.");
-  } else {
-    alert("Usuario eliminado correctamente.");
-    cargarUsuarios();
-  }
-}
+    const nuevo = prompt("Nuevo email (deja vacío para eliminar):", actual).trim();
+    if (nuevo === null) return; // canceló
 
-async function cambiarContrasena(nit) {
-  const nueva = prompt("Ingrese la nueva contraseña (mínimo 4 y máximo 15 caracteres):");
-  if (!nueva || nueva.length < 4 || nueva.length > 15) {
-    alert("Debe ingresar entre 4 y 15 caracteres.");
-    return;
-  }
-
-  const { error } = await supabase
-    .from("usuarios")
-    .update({ contraseña: nueva })
-    .eq("nit", nit.toString());
-
-  if (error) {
-    console.error("Error al cambiar contraseña:", error);
-    alert("No se pudo cambiar la contraseña.");
-  } else {
-    alert("Contraseña actualizada correctamente.");
-    cargarUsuarios();
-  }
-}
-
-document.querySelectorAll("#filtroNIT, #filtroEmpresa ").forEach(input => {
-  input.addEventListener("input", mostrarUsuarios);
-});
-
-cargarUsuarios();
-</script>
-  
- 
-
-  <script>
-    // Seguridad: sesión obligatoria
-    if (!localStorage.getItem("nit")) {
-      window.location.replace("login.html");
+    // Validación sencilla de email (si no está vacío)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const valor = nuevo === "" ? null : nuevo;
+    if (valor && !emailRegex.test(valor)) {
+      alert("Ingrese un correo válido (ej: usuario@empresa.com).");
+      return;
     }
 
-    // Bloqueo de retroceso
-    history.pushState(null, null, location.href);
-    window.onpopstate = function () {
-      history.pushState(null, null, location.href);
-    };
-  </script>
-  <script src="mensajes_globales.js"></script>
+    const { error } = await supabase
+      .from("usuarios")
+      .update({ email: valor })
+      .eq("nit", nit);
 
+    if (error) {
+      console.error(error);
+      alert("No se pudo actualizar el email.");
+    } else {
+      alert(valor ? "Email actualizado." : "Email eliminado.");
+      cargarUsuarios();
+    }
+  }
+
+  // Reset + compartir (genera temporal y envía)
+  async function resetYCompartir(nit) {
+    const temporal = genTemp(8);
+
+    const { data: u, error: e1 } = await supabase
+      .from("usuarios")
+      .select("email, empresa")
+      .eq("nit", nit)
+      .maybeSingle();
+
+    if (e1) { console.error(e1); alert("No se pudo obtener el usuario."); return; }
+
+    const { error: e2 } = await supabase
+      .from("usuarios")
+      .update({ password_hash: temporal, must_change_password: true, password_temporal: true })
+      .eq("nit", nit);
+
+    if (e2) { console.error(e2); alert("No se pudo resetear la contraseña."); return; }
+
+    const asunto = encodeURIComponent("Acceso temporal | MC Terminals");
+    const cuerpo = encodeURIComponent(
+`Hola ${u?.empresa || "usuario"},
+
+Se te asignó una nueva contraseña temporal para el sistema de órdenes.
+
+🔐 NIT: ${nit}
+🔑 Contraseña temporal: ${temporal}
+
+Al ingresar, el sistema te pedirá cambiarla.
+
+Acceso:
+https://mc-terminals.github.io/MC-TERMINALS-WEB
+
+-- Equipo MC Terminals`);
+    const mailto = `mailto:${u?.email || ""}?subject=${asunto}&body=${cuerpo}`;
+    window.location.href = mailto;
+  }
+
+  // Cambiar contraseña manual (sin compartir)
+  async function cambiarContrasena(nit) {
+    const nueva = prompt("Ingrese la nueva contraseña temporal (4–15 caracteres):");
+    if (!nueva) return;
+    if (nueva.length < 4 || nueva.length > 15) { alert("Longitud inválida."); return; }
+
+    const { error } = await supabase
+      .from("usuarios")
+      .update({ password_hash: nueva, must_change_password: true, password_temporal: true })
+      .eq("nit", nit);
+
+    if (error) { console.error(error); alert("No se pudo actualizar la contraseña."); }
+    else { alert("Contraseña actualizada. El usuario deberá cambiarla al ingresar."); }
+  }
+
+  // Eliminar usuario
+  async function eliminarUsuario(nit) {
+    const confirmar = confirm(`¿Estás seguro de eliminar al usuario con NIT ${nit}?`);
+    if (!confirmar) return;
+
+    const { error } = await supabase.from("usuarios").delete().eq("nit", nit);
+    if (error) { console.error(error); alert("No se pudo eliminar el usuario."); }
+    else { alert("Usuario eliminado correctamente."); cargarUsuarios(); }
+  }
+
+  // Exponer para onclick
+  window.abrirModalRol = abrirModalRol;
+  window.cambiarEmail   = cambiarEmail;
+  window.resetYCompartir = resetYCompartir;
+  window.cambiarContrasena = cambiarContrasena;
+  window.eliminarUsuario = eliminarUsuario;
+
+  // Seguridad mínima
+  if (!localStorage.getItem("nit")) window.location.replace("login.html");
+
+  // Bloqueo de retroceso
+  history.pushState(null, null, location.href);
+  window.onpopstate = () => history.pushState(null, null, location.href);
+
+  // Cargar
+  document.addEventListener("DOMContentLoaded", cargarUsuarios);
+</script>
+
+<!-- Avisos globales en tiempo real (tu script reutilizable) -->
+<script src="mensajes_globales.js"></script>
 </body>
-
-
 </html>

@@ -372,4 +372,3 @@ document.addEventListener("DOMContentLoaded", cargarDatosOrden);
 
 
 document.addEventListener("DOMContentLoaded", cargarDatosOrden);
-
