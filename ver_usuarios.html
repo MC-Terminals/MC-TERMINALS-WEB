@@ -15,6 +15,7 @@
     .table{color:#fff}
     .logo-superior{text-align:end;margin-bottom:10px}
     .logo-img{width:80px;height:auto}
+    .badge-bloqueado{background:#ef4444} /* rojo */
     @media (max-width:768px){
       .logo-superior{position:absolute;top:20px;right:10px}
       .logo-img{width:60px}
@@ -52,7 +53,7 @@
             <th>Empresa</th>
             <th>Rol</th>
             <th>Email</th>
-            <th style="min-width:420px">Acciones</th>
+            <th style="min-width:520px">Acciones</th>
           </tr>
         </thead>
         <tbody id="tablaUsuarios"></tbody>
@@ -111,11 +112,11 @@
     return Array.from({length: len}, () => abc[Math.floor(Math.random()*abc.length)]).join("");
   }
 
-  // Cargar usuarios
+  // Cargar usuarios (ahora pedimos 'bloqueado')
   async function cargarUsuarios() {
     const { data, error } = await supabase
       .from("usuarios")
-      .select("nit, empresa, rol, email, must_change_password")
+      .select("nit, empresa, rol, email, must_change_password, bloqueado")
       .order("empresa", { ascending: true });
 
     if (error) { console.error(error); return; }
@@ -136,18 +137,27 @@
         String(u.empresa).toLowerCase().includes(fEmp)
       )
       .forEach(u => {
+        const disabled = u.bloqueado ? "disabled" : "";
+        const badge = u.bloqueado ? ' <span class="badge badge-bloqueado ms-2">Bloqueado</span>' : "";
+
         const tr = document.createElement("tr");
+        if (u.bloqueado) tr.classList.add("table-danger", "table-opacity-75");
+
         tr.innerHTML = `
           <td>${u.nit}</td>
           <td>${u.empresa}</td>
-          <td>${u.rol}</td>
+          <td>${u.rol}${badge}</td>
           <td>${u.email ?? "-"}</td>
           <td>
-            <button class="btn btn-sm btn-warning btn-action" onclick="abrirModalRol('${u.nit}')">Asignar Rol</button>
-            <button class="btn btn-sm btn-info btn-action" onclick="cambiarEmail('${u.nit}')">Cambiar Email</button>
-            <button class="btn btn-sm btn-primary btn-action" onclick="resetYCompartir('${u.nit}')">Reset & Compartir</button>
-            <button class="btn btn-sm btn-secondary btn-action" onclick="cambiarContrasena('${u.nit}')">Cambiar Contraseña</button>
-            <button class="btn btn-sm btn-danger btn-action" onclick="eliminarUsuario('${u.nit}')">Eliminar</button>
+            <button class="btn btn-sm btn-warning btn-action" ${disabled} onclick="abrirModalRol('${u.nit}')">Asignar Rol</button>
+            <button class="btn btn-sm btn-info btn-action" ${disabled} onclick="cambiarEmail('${u.nit}')">Cambiar Email</button>
+            <button class="btn btn-sm btn-primary btn-action" ${disabled} onclick="resetYCompartir('${u.nit}')">Reset & Compartir</button>
+            <button class="btn btn-sm btn-secondary btn-action" ${disabled} onclick="cambiarContrasena('${u.nit}')">Cambiar Contraseña</button>
+            ${
+              u.bloqueado
+              ? `<button class="btn btn-sm btn-success btn-action" onclick="desbloquearUsuario('${u.nit}')">Desbloquear</button>`
+              : `<button class="btn btn-sm btn-danger btn-action" onclick="bloquearUsuario('${u.nit}')">Bloquear</button>`
+            }
           </td>`;
         tabla.appendChild(tr);
       });
@@ -184,35 +194,34 @@
   });
 
   // Cambiar Email
-async function cambiarEmail(nit) {
-  const user = usuarios.find(u => u.nit === nit);
-  const actual = user?.email || "";
+  async function cambiarEmail(nit) {
+    const user = usuarios.find(u => u.nit === nit);
+    const actual = user?.email || "";
 
-  const resp = prompt("Nuevo email (deja vacío para eliminar):", actual);
-  if (resp === null) return;           // canceló
-  const nuevo = resp.trim();
+    const resp = prompt("Nuevo email (deja vacío para eliminar):", actual);
+    if (resp === null) return;           // canceló
+    const nuevo = resp.trim();
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const valor = nuevo === "" ? null : nuevo;
-  if (valor && !emailRegex.test(valor)) {
-    alert("Ingrese un correo válido (ej: usuario@empresa.com).");
-    return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const valor = nuevo === "" ? null : nuevo;
+    if (valor && !emailRegex.test(valor)) {
+      alert("Ingrese un correo válido (ej: usuario@empresa.com).");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("usuarios")
+      .update({ email: valor })
+      .eq("nit", nit);
+
+    if (error) {
+      console.error(error);
+      alert("No se pudo actualizar el email.");
+    } else {
+      alert(valor ? "Email actualizado." : "Email eliminado.");
+      cargarUsuarios();
+    }
   }
-
-  const { error } = await supabase
-    .from("usuarios")
-    .update({ email: valor })
-    .eq("nit", nit);
-
-  if (error) {
-    console.error(error);
-    alert("No se pudo actualizar el email.");
-  } else {
-    alert(valor ? "Email actualizado." : "Email eliminado.");
-    cargarUsuarios();
-  }
-}
-
 
   // Reset + compartir (genera temporal y envía)
   async function resetYCompartir(nit) {
@@ -252,7 +261,7 @@ https://mc-terminals.github.io/MC-TERMINALS-WEB
     window.location.href = mailto;
   }
 
-  // Cambiar contraseña manual (sin compartir)
+  // Cambiar contraseña manual
   async function cambiarContrasena(nit) {
     const nueva = prompt("Ingrese la nueva contraseña temporal (4–15 caracteres):");
     if (!nueva) return;
@@ -267,14 +276,31 @@ https://mc-terminals.github.io/MC-TERMINALS-WEB
     else { alert("Contraseña actualizada. El usuario deberá cambiarla al ingresar."); }
   }
 
-  // Eliminar usuario
-  async function eliminarUsuario(nit) {
-    const confirmar = confirm(`¿Estás seguro de eliminar al usuario con NIT ${nit}?`);
-    if (!confirmar) return;
+  // Bloquear / Desbloquear
+  async function bloquearUsuario(nit) {
+    if (!confirm(`¿Bloquear al usuario ${nit}?`)) return;
+    const { error } = await supabase
+      .from("usuarios")
+      .update({
+        bloqueado: true,
+        bloqueado_por_nit: localStorage.getItem("nit") || null,
+        bloqueado_en: new Date().toISOString()
+      })
+      .eq("nit", nit);
 
-    const { error } = await supabase.from("usuarios").delete().eq("nit", nit);
-    if (error) { console.error(error); alert("No se pudo eliminar el usuario."); }
-    else { alert("Usuario eliminado correctamente."); cargarUsuarios(); }
+    if (error) { console.error(error); alert("No se pudo bloquear."); }
+    else { cargarUsuarios(); }
+  }
+
+  async function desbloquearUsuario(nit) {
+    if (!confirm(`¿Desbloquear al usuario ${nit}?`)) return;
+    const { error } = await supabase
+      .from("usuarios")
+      .update({ bloqueado: false })
+      .eq("nit", nit);
+
+    if (error) { console.error(error); alert("No se pudo desbloquear."); }
+    else { cargarUsuarios(); }
   }
 
   // Exponer para onclick
@@ -282,7 +308,8 @@ https://mc-terminals.github.io/MC-TERMINALS-WEB
   window.cambiarEmail   = cambiarEmail;
   window.resetYCompartir = resetYCompartir;
   window.cambiarContrasena = cambiarContrasena;
-  window.eliminarUsuario = eliminarUsuario;
+  window.bloquearUsuario = bloquearUsuario;
+  window.desbloquearUsuario = desbloquearUsuario;
 
   // Seguridad mínima
   if (!localStorage.getItem("nit")) window.location.replace("login.html");
@@ -294,8 +321,8 @@ https://mc-terminals.github.io/MC-TERMINALS-WEB
   // Cargar
   document.addEventListener("DOMContentLoaded", cargarUsuarios);
 </script>
-
-<!-- Avisos globales en tiempo real (tu script reutilizable) -->
+<script src="guard_bloqueo.js"></script>
+<!-- Avisos globales -->
 <script src="mensajes_globales.js"></script>
 </body>
 </html>

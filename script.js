@@ -25,7 +25,25 @@ if (path.includes("login.html")) {
       return;
     }
 
+    // ← NUEVO: verificar si está bloqueado
     const { nit: nitOK, rol, empresa, must_change_password } = data[0];
+    const { data: uInfo, error: eInfo } = await supabase
+      .from('usuarios')
+      .select('bloqueado')
+      .eq('nit', nitOK)
+      .maybeSingle();
+
+    if (eInfo) {
+      console.error(eInfo);
+      mensaje.innerText = "Error validando el estado del usuario.";
+      return;
+    }
+    if (uInfo?.bloqueado) {
+      mensaje.style.color = "tomato";
+      mensaje.innerText = "Tu usuario está BLOQUEADO. Contacta a administración.";
+      return; // No guardes nada en localStorage
+    }
+    // ← FIN NUEVO
 
     localStorage.setItem("nit", nitOK);
     localStorage.setItem("rol", rol);
@@ -41,6 +59,7 @@ if (path.includes("login.html")) {
     setTimeout(() => { window.location.href = "menu.html"; }, 1200);
   });
 }
+
 
 
 
