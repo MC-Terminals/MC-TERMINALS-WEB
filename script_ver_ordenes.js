@@ -1,6 +1,4 @@
-// script_ver_ordenes.js
-
-
+// === NUEVO ESTADO Y UTILS ===
 const tabla = document.getElementById("tablaOrdenes");
 const filtroEstatus = document.getElementById("filtroEstatus");
 const filtroInicio = document.getElementById("filtroFechaInicio");
@@ -12,27 +10,35 @@ const filtroPiloto = document.getElementById("filtroPiloto");
 const filtroBodegaExterna = document.getElementById("filtroBodegaExterna");
 const filtroEmpresa = document.getElementById("filtroEmpresa");
 
-
-
-let ordenes = [];
 let empresasPorNit = {};
 let buquesPorId = {};
+
+// paginación server-side
 let paginaActual = 1;
-const ordenesPorPagina = 10;
-let ordenesFiltradas = [];
-// === Límite de selección para orden masiva ===
+const pageSize = 30;        // ajusta a 50/100
+let totalFiltradas = 0;
+let ordenesPagina = [];     // solo la página actual
+const cacheOrdenes = new Map(); // para buscar por id cuando no está en la página
+
+// === Selección masiva (tu misma lógica)
 const MAX_MASIVO = 25;
-
-
-// === Selección inteligente para impresión masiva ===
 const seleccionadas = new Set();        // no_orden seleccionadas
 let groupKey = null;                     // "buque|bl|producto"
 
+// num formats
 const fmtQQ  = new Intl.NumberFormat("es-GT",{ minimumFractionDigits:0, maximumFractionDigits:4 });
 const fmtTon = new Intl.NumberFormat("es-GT",{ minimumFractionDigits:2, maximumFractionDigits:2 });
 
+// helpers
 const keyFrom   = (o) => `${o.buque}|${o.bl}|${o.producto}`;
-const ordenById = (id) => ordenes.find(x => x.no_orden === id);
+const ordenById = (id) => cacheOrdenes.get(id);
+
+// fecha fin exclusivo (+1 día)
+function addOneDay(ymd) {
+  const d = new Date(ymd + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0,10);
+}
 
 function actualizarUISeleccion() {
   const btn = document.getElementById("btnImprimirMasivo");
@@ -88,135 +94,161 @@ function showWarn(msg) {
 
 function syncCheckAllPage() {
   const visibles = Array.from(tabla.querySelectorAll(".chkOrden")).filter(c => !c.disabled);
-  const all = document.getElementById("checkAllPage");
-  if (!all) return;
-  all.checked = visibles.length > 0 && visibles.every(c => c.checked);
+  const checkAllPage = document.getElementById("checkAllPage");
+if (checkAllPage) {
+  checkAllPage.onclick = () => {
+    if (checkAllPage.checked) {
+      if (!groupKey && ordenesPagina.length) groupKey = keyFrom(ordenesPagina[0]);
+      const candidatas = ordenesPagina.filter(o => keyFrom(o) === groupKey);
+      if (candidatas.length > MAX_MASIVO) showWarn(`Se seleccionarán solo ${MAX_MASIVO} (límite por orden).`);
+
+      const ya = new Set(seleccionadas);
+      seleccionadas.clear();
+      Array.from(ya).forEach(id => {
+        const o = ordenById(id);
+        if (o && keyFrom(o) === groupKey && seleccionadas.size < MAX_MASIVO) seleccionadas.add(id);
+      });
+      for (const o of candidatas) {
+        if (seleccionadas.size >= MAX_MASIVO) break;
+        seleccionadas.add(o.no_orden);
+      }
+    } else {
+      clearGroup();
+    }
+    mostrarOrdenes();
+  };
+}
+
 }
 
 
 
 async function cargarOrdenes() {
-  const { data: ordenesData, error: ordenesError } = await supabase.from("ordenes").select("*");
-  if (ordenesError) {
-    console.error("Error al cargar las órdenes:", ordenesError);
-    return;
-  }
-
-  const { data: usuariosData, error: usuariosError } = await supabase.from("usuarios").select("nit, empresa");
+  // usuarios → mapa NIT → Empresa (para filtro Empresa)
+  const { data: usuariosData, error: usuariosError } =
+    await supabase.from("usuarios").select("nit, empresa");
   if (usuariosError) {
     console.error("Error al cargar usuarios:", usuariosError);
     return;
   }
-
-  // Cargar todos los buques
-const { data: buquesData, error: buquesError } = await supabase.from("buques").select("id, nombre");
-if (buquesError) {
-  console.error("Error al cargar buques:", buquesError);
-  return;
-}
-buquesPorId = {};
-buquesData.forEach(b => {
-  buquesPorId[b.id] = b.nombre;
-});
-
-
-  // Crea un mapa de NIT → Empresa
   empresasPorNit = {};
-  usuariosData.forEach(u => {
-    empresasPorNit[u.nit] = u.empresa;
-  });
+  usuariosData.forEach(u => { empresasPorNit[u.nit] = u.empresa; });
 
-  function llenarFiltroEmpresa() {
+  // buques → para mostrar nombre
+  const { data: buquesData, error: buquesError } =
+    await supabase.from("buques").select("id, nombre");
+  if (buquesError) {
+    console.error("Error al cargar buques:", buquesError);
+    return;
+  }
+  buquesPorId = {};
+  buquesData.forEach(b => { buquesPorId[b.id] = b.nombre; });
+
+  // llenar filtro Empresa (únicas)
   const select = document.getElementById("filtroEmpresa");
   select.innerHTML = '<option value="">Todas</option>';
-
-  // Obtener lista única de empresas
   const empresasUnicas = [...new Set(Object.values(empresasPorNit))].sort();
-
   empresasUnicas.forEach(empresa => {
-    const option = document.createElement("option");
-    option.value = empresa.toLowerCase();
-    option.textContent = empresa;
-    select.appendChild(option);
+    const opt = document.createElement("option");
+    opt.value = (empresa || "").toLowerCase();
+    opt.textContent = empresa || "";
+    select.appendChild(opt);
   });
- 
-}
 
-
-  ordenes = ordenesData;
+  // mostrar la primera página
+  paginaActual = 1;
   mostrarOrdenes();
-  llenarFiltroEmpresa();
 }
 
-
-function mostrarOrdenes() {
-  const rol = localStorage.getItem("rol");
+function buildQueryBase() {
+  const rol        = localStorage.getItem("rol");
   const nitUsuario = localStorage.getItem("nit");
 
-  const estatus = filtroEstatus.value;
-  const inicio = filtroInicio.value;
-  const fin = filtroFin.value;
-  const bodega = filtroBodega.value.toLowerCase();
-  const producto = filtroProducto.value.toLowerCase();
-  const placa = filtroPlaca.value.toLowerCase();
-  const piloto = filtroPiloto.value.toLowerCase();
+  const estatus    = filtroEstatus.value;      // ""|"generada"|...
+  const inicio     = filtroInicio.value;       // YYYY-MM-DD
+  const fin        = filtroFin.value;          // YYYY-MM-DD
+  const bodega     = filtroBodega.value.trim();
+  const producto   = filtroProducto.value.trim();
+  const placa      = filtroPlaca.value.trim();
+  const piloto     = filtroPiloto.value.trim();
+  const extVal     = filtroBodegaExterna.value;    // ""|"true"|"false"
+  const empSel     = filtroEmpresa.value;          // ""|empresa lower-case
+
+  let q = supabase
+    .from("ordenes")
+    .select("*", { count: "exact" })
+    .order("no_orden", { ascending: false }); // más nuevas primero
+
+  // fechas (fin exclusivo)
+  if (inicio) q = q.gte("fecha_generada", `${inicio}T00:00:00`);
+  if (fin)    q = q.lt ("fecha_generada", `${addOneDay(fin)}T00:00:00`);
+
+  // filtros
+  if (estatus)  q = q.eq("estatus", estatus);
+  if (bodega)   q = q.ilike("bodega", `%${bodega}%`);
+  if (producto) q = q.ilike("producto", `%${producto}%`);
+  if (placa)    q = q.ilike("placa", `%${placa}%`);
+  if (piloto)   q = q.ilike("piloto", `%${piloto}%`);
+  if (extVal !== "") q = q.eq("bodega_externa", extVal === "true");
+
+  // visibilidad por rol
+  if (rol === "consignatario" || rol === "cliente") {
+    q = q.eq("nit_usuario", nitUsuario);
+  }
+
+  // filtro Empresa ⇒ traducir empresa a lista de NITs
+  if (empSel) {
+    const nits = Object.entries(empresasPorNit)
+      .filter(([, emp]) => (emp || "").toLowerCase() === empSel)
+      .map(([nit]) => nit);
+    q = nits.length ? q.in("nit_usuario", nits) : q.in("nit_usuario", ["__no__match__"]);
+  }
+
+  return q;
+}
+
+async function cargarPagina(pagina = 1) {
+  const from = (pagina - 1) * pageSize;
+  const to   = from + pageSize - 1;
+
+  let q = buildQueryBase();
+  const { data, count, error } = await q.range(from, to);
+  if (error) {
+    console.error("Error al cargar órdenes:", error);
+    return { data: [], count: 0 };
+  }
+
+  // actualiza cache para selección/imprimir
+  (data || []).forEach(o => cacheOrdenes.set(o.no_orden, o));
+  return { data: data || [], count: count || 0 };
+}
+
+
+
+
+async function mostrarOrdenes() {
+  const { data, count } = await cargarPagina(paginaActual);
+  ordenesPagina   = data;
+  totalFiltradas  = count;
 
   tabla.innerHTML = "";
 
-  // Aplicar filtros
-const empresaFiltro = filtroEmpresa.value;
-
-ordenesFiltradas = ordenes.filter(o => {
-  const fecha = new Date(o.fecha_generada).toLocaleDateString('fr-CA');
-  const empresaActual = (empresasPorNit[o.nit_usuario] || "").toLowerCase();
-
-  if (rol === "consignatario" && o.nit_usuario !== nitUsuario) return false;
-
-  return (
-    (estatus === "" || o.estatus === estatus) &&
-    (!inicio || fecha >= inicio) &&
-    (!fin || fecha <= fin) &&
-    o.bodega.toLowerCase().includes(bodega) &&
-    o.producto.toLowerCase().includes(producto) &&
-    o.placa.toLowerCase().includes(placa) &&
-    (o.piloto || "").toLowerCase().includes(piloto) &&
-    (filtroBodegaExterna.value === "" || String(o.bodega_externa) === filtroBodegaExterna.value) &&
-    (empresaFiltro === "" || empresaActual === empresaFiltro)
-
-  );
-});
-
-// Calcular total, páginas y rango actual
-const totalOrdenes = ordenesFiltradas.length;
-const totalPaginas = Math.ceil(totalOrdenes / ordenesPorPagina);
-const inicioPagina = (paginaActual - 1) * ordenesPorPagina;
-const finPagina = Math.min(inicioPagina + ordenesPorPagina, totalOrdenes);
-
-// Texto más informativo para el usuario
-const textoOrdenes = (finPagina - inicioPagina === 1) ? "orden" : "órdenes";
-document.getElementById("contadorOrdenes").textContent =
-  `Mostrando ${finPagina - inicioPagina} de ${totalOrdenes} ${textoOrdenes} (Página ${paginaActual} de ${totalPaginas})`;
-
-
-  const ordenesPaginadas = ordenesFiltradas.slice(inicioPagina, finPagina);
-
-  // Mostrar órdenes paginadas
-  ordenesPaginadas.forEach(o => {
-    const tr = document.createElement("tr");
+  ordenesPagina.forEach(o => {
     const checked = seleccionadas.has(o.no_orden) ? "checked" : "";
+    const tr = document.createElement("tr");
     tr.innerHTML = `
-    <td><input type="checkbox" class="chkOrden" data-id="${o.no_orden}" ${checked}></td>
+      <td><input type="checkbox" class="chkOrden" data-id="${o.no_orden}" ${checked}></td>
       <td>${o.no_orden}</td>
-      <td>${new Date(o.fecha_generada).toLocaleString()}</td>
+      <td>${o.fecha_generada ? new Date(o.fecha_generada).toLocaleString() : ""}</td>
       <td>${buquesPorId[o.buque] || o.buque}</td>
-      <td>${o.bl}</td>
+      <td>${o.bl || ""}</td>
       <td>${empresasPorNit[o.nit_usuario] || "Desconocida"}</td>
-      <td>${o.placa}</td>
-      <td>${o.piloto}</td>
-      <td>${o.producto}</td>
-      <td>${o.bodega}</td>
-      <td>${o.cantidad_qq}</td>
-      <td>${o.cantidad_ton.toFixed(2)}</td>
+      <td>${o.placa || ""}</td>
+      <td>${o.piloto || ""}</td>
+      <td>${o.producto || ""}</td>
+      <td>${o.bodega || ""}</td>
+      <td>${o.cantidad_qq ?? ""}</td>
+      <td>${(o.cantidad_ton ?? 0).toFixed(2)}</td>
       <td>${o.nombre_transporte || "-"}</td>
       <td>${o.no_orden_interna || "-"}</td>
       <td>${o.observacion || "-"}</td>
@@ -227,84 +259,45 @@ document.getElementById("contadorOrdenes").textContent =
     tabla.appendChild(tr);
   });
 
-  // Actualizar estado de botones
-  document.getElementById("btnAnterior").disabled = paginaActual === 1;
-  document.getElementById("btnSiguiente").disabled = finPagina >= ordenesFiltradas.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalFiltradas / pageSize));
+  document.getElementById("contadorOrdenes").textContent =
+    `Mostrando ${ordenesPagina.length} de ${totalFiltradas} órdenes (Página ${paginaActual} de ${totalPaginas})`;
 
-  // === Listeners de checks por fila ===
-tabla.querySelectorAll(".chkOrden").forEach(chk => {
-  chk.addEventListener("change", (e) => {
-    const id = Number(e.target.dataset.id);
-    const o  = ordenById(id);
+  document.getElementById("btnAnterior").disabled  = paginaActual <= 1;
+  document.getElementById("btnSiguiente").disabled = paginaActual >= totalPaginas;
 
-    if (e.target.checked) {
-      // Límite 25
-      if (seleccionadas.size >= MAX_MASIVO && !seleccionadas.has(id)) {
-        e.target.checked = false;
-        showWarn(`Máximo permitido: ${MAX_MASIVO} unidades por orden masiva.`);
-        return;
-      }
-      // Primera selección fija la regla
-      if (!groupKey) groupKey = keyFrom(o);
-      if (keyFrom(o) !== groupKey) {
-        e.target.checked = false;
-        showWarn("Solo puedes agrupar órdenes con el MISMO buque, BL y producto.");
-        return;
-      }
-      seleccionadas.add(id);
-    } else {
-      seleccionadas.delete(id);
-      if (seleccionadas.size === 0) groupKey = null;
-    }
+  // listeners de checks (misma lógica tuya)
+  tabla.querySelectorAll(".chkOrden").forEach(chk => {
+    chk.addEventListener("change", (e) => {
+      const id = Number(e.target.dataset.id);
+      const o  = ordenById(id);
 
-    actualizarUISeleccion();
-    applyGroupLock();
-  });
-});
-
-
-// === Checkbox maestro: seleccionar/deseleccionar TODAS las FILTRADAS (respetando la regla y el límite) ===
-const checkAllPage = document.getElementById("checkAllPage");
-if (checkAllPage) {
-  checkAllPage.onclick = () => {
-    if (checkAllPage.checked) {
-      // Si no hay regla, la fijamos con la primera orden filtrada
-      if (!groupKey && ordenesFiltradas.length) {
-        groupKey = keyFrom(ordenesFiltradas[0]);
-      }
-      // Tomar todas las filtradas que cumplan la regla
-      const candidatas = ordenesFiltradas.filter(o => keyFrom(o) === groupKey);
-      if (candidatas.length > MAX_MASIVO) {
-        showWarn(`Se seleccionarán solo ${MAX_MASIVO} (límite por orden).`);
-      }
-      // Rellenar hasta el límite, manteniendo las ya marcadas
-      const ya = new Set(seleccionadas);
-      seleccionadas.clear();
-      // Primero conserva las ya seleccionadas (que cumplan la regla)
-      Array.from(ya).forEach(id => {
-        const o = ordenById(id);
-        if (o && keyFrom(o) === groupKey && seleccionadas.size < MAX_MASIVO) {
-          seleccionadas.add(id);
+      if (e.target.checked) {
+        if (seleccionadas.size >= MAX_MASIVO && !seleccionadas.has(id)) {
+          e.target.checked = false;
+          showWarn(`Máximo permitido: ${MAX_MASIVO} unidades por orden masiva.`);
+          return;
         }
-      });
-      // Luego agrega más de las filtradas hasta llegar al tope
-      for (const o of candidatas) {
-        if (seleccionadas.size >= MAX_MASIVO) break;
-        seleccionadas.add(o.no_orden);
+        if (!groupKey) groupKey = keyFrom(o);
+        if (keyFrom(o) !== groupKey) {
+          e.target.checked = false;
+          showWarn("Solo puedes agrupar órdenes con el MISMO buque, BL y producto.");
+          return;
+        }
+        seleccionadas.add(id);
+      } else {
+        seleccionadas.delete(id);
+        if (seleccionadas.size === 0) groupKey = null;
       }
-    } else {
-      clearGroup();
-    }
-    // Re-pintar para reflejar checks en la página actual y las otras
-    mostrarOrdenes();
-  };
+      actualizarUISeleccion();
+      applyGroupLock();
+    });
+  });
+
+  applyGroupLock();
+  actualizarUISeleccion();
 }
 
-
-// aplicar bloqueo/estilos y actualizar badge
-applyGroupLock();
-actualizarUISeleccion();
-}
 
 
 
@@ -314,15 +307,12 @@ actualizarUISeleccion();
 
 
 async function imprimirOrden(no_orden) {
-  const orden = ordenes.find(o => o.no_orden === no_orden);
-  if (!orden) return alert("Orden no encontrada.");
+  const orden = ordenById(no_orden);
+  if (!orden) return alert("Orden no encontrada en la caché.");
 
-  // Obtener nombre de la empresa desde el usuario
-  const { data: usuario, error } = await supabase
-    .from("usuarios")
-    .select("empresa")
-    .eq("nit", orden.nit_usuario)
-    .single();
+  const { data: usuario } = await supabase
+    .from("usuarios").select("empresa")
+    .eq("nit", orden.nit_usuario).single();
 
   const empresaNombre = usuario?.empresa || "Empresa Desconocida";
 
@@ -532,7 +522,7 @@ function formatearFecha(fecha) {
 }
 
 
-function exportarExcel() {
+async function exportarExcel() {
     const rol = localStorage.getItem("rol");
   const nitUsuario = localStorage.getItem("nit");
 
@@ -548,55 +538,34 @@ function exportarExcel() {
 
   ];
 
-  ordenes.filter(o => {
-   const fecha = new Date(o.fecha_generada).toLocaleDateString('fr-CA');
-    const filtroBodegaExt = document.getElementById("filtroBodegaExterna").value;
-    const filtroEmpresa = document.getElementById("filtroEmpresa").value.toLowerCase();
-
-
-
-    // ✅ Filtrar por nit del consignatario
-    if (rol === "consignatario" && o.nit_usuario !== nitUsuario) return false;
-
-    return (
-  (!filtroEstatus.value || o.estatus === filtroEstatus.value) &&
-  (!filtroInicio.value || fecha >= filtroInicio.value) &&
-  (!filtroFin.value || fecha <= filtroFin.value) &&
-  o.bodega.toLowerCase().includes(filtroBodega.value.toLowerCase()) &&
-  o.producto.toLowerCase().includes(filtroProducto.value.toLowerCase()) &&
-  o.placa.toLowerCase().includes(filtroPlaca.value.toLowerCase()) &&
-  o.piloto.toLowerCase().includes(filtroPiloto.value.toLowerCase()) &&
-  (filtroBodegaExt === "" || String(o.bodega_externa) === filtroBodegaExt)
-  && (filtroEmpresa === "" || (empresasPorNit[o.nit_usuario] || "").toLowerCase().includes(filtroEmpresa))
-);
-  })
-
-  .forEach(o => {
-ws_data.push([
-  o.no_orden,
-  o.fecha_creada ? new Date(o.fecha_creada) : null,
-  buquesPorId[o.buque] || o.buque,
-  o.bl,
-  empresasPorNit[o.nit_usuario] || "Desconocida",
-  o.placa,
-  o.piloto,
-  o.producto,
-  o.bodega,
+  const rows = await fetchAllFiltradas(); // todas las filtradas
+rows.forEach(o => {
+  ws_data.push([
+    o.no_orden,
+    o.fecha_creada ? new Date(o.fecha_creada) : null,
+    buquesPorId[o.buque] || o.buque,
+    o.bl,
+    empresasPorNit[o.nit_usuario] || "Desconocida",
+    o.placa,
+    o.piloto,
+    o.producto,
+    o.bodega,
     o.nombre_transporte,
-  o.no_orden_interna,
-  o.cantidad_qq,
-  o.cantidad_ton,
-  o.estatus,
-  o.fecha_generada ? new Date(o.fecha_generada) : null,
-  o.fecha_registrada ? new Date(o.fecha_registrada) : null,
-  o.fecha_salio_predio ? new Date(o.fecha_salio_predio) : null,
-  o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial) : null,
-  o.fecha_finalizada ? new Date(o.fecha_finalizada) : null,
-  o.boleta_final ? Number(o.boleta_final) : null,
-  o.fecha_bodega_externa ? new Date(o.fecha_bodega_externa) : null,
-  o.observacion
-]);
-  });
+    o.no_orden_interna,
+    o.cantidad_qq,
+    o.cantidad_ton,
+    o.estatus,
+    o.fecha_generada ? new Date(o.fecha_generada) : null,
+    o.fecha_registrada ? new Date(o.fecha_registrada) : null,
+    o.fecha_salio_predio ? new Date(o.fecha_salio_predio) : null,
+    o.fecha_peso_inicial ? new Date(o.fecha_peso_inicial) : null,
+    o.fecha_finalizada ? new Date(o.fecha_finalizada) : null,
+    o.boleta_final ? Number(o.boleta_final) : null,
+    o.fecha_bodega_externa ? new Date(o.fecha_bodega_externa) : null,
+    o.observacion
+  ]);
+});
+
 
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
@@ -652,6 +621,27 @@ ws["!cols"] = colWidths;
   XLSX.writeFile(wb, "ordenes_reporte.xlsx");
 }
 
+async function fetchAllFiltradas() {
+  // base con los mismos filtros
+  let base = buildQueryBase();
+
+  // conocer total
+  const first = await base.range(0, 0);
+  if (first.error) { console.error(first.error); return []; }
+  const count = first.count || 0;
+
+  const CHUNK = 1000;
+  let all = [];
+  for (let from = 0; from < count; from += CHUNK) {
+    const to = Math.min(from + CHUNK - 1, count - 1);
+    const { data, error } = await buildQueryBase().range(from, to);
+    if (error) { console.error(error); break; }
+    all = all.concat(data || []);
+  }
+  return all;
+}
+
+
 function limpiarFiltros() {
   filtroEstatus.value = "";
   filtroBodega.value = "";
@@ -674,52 +664,31 @@ function limpiarFiltros() {
 }
 
 [
-  filtroEstatus,
-  filtroInicio,
-  filtroFin,
-  filtroBodega,
-  filtroProducto,
-  filtroPlaca,
-  filtroPiloto,
-  filtroBodegaExterna,
-  filtroEmpresa // 👈 nuevo
-].forEach(f => f.addEventListener("input", mostrarOrdenes));
+  filtroEstatus, filtroInicio, filtroFin, filtroBodega,
+  filtroProducto, filtroPlaca, filtroPiloto, filtroBodegaExterna,
+  filtroEmpresa
+].forEach(f => f.addEventListener("input", () => {
+  paginaActual = 1;
+  mostrarOrdenes();
+}));
 
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  const btnExportar = document.querySelector("button[onclick='exportarExcel()']");
+  if (!localStorage.getItem("nit")) window.location.href = "login.html";
 
-  document.getElementById("btnAnterior").addEventListener("click", () => {
-  if (paginaActual > 1) {
-    paginaActual--;
-    mostrarOrdenes();
-  }
-});
-
-document.getElementById("btnSiguiente").addEventListener("click", () => {
-  if ((paginaActual * ordenesPorPagina) < ordenesFiltradas.length) {
-    paginaActual++;
-    mostrarOrdenes();
-  }
-});
-
-const btnMasivo = document.getElementById("btnImprimirMasivo");
-if (btnMasivo) btnMasivo.addEventListener("click", imprimirOrdenMasiva);
-
-
-
-
-
-  if (!localStorage.getItem("nit")) {
-    window.location.href = "login.html";
-  }
-
-  // ⏰ Establecer fecha actual como valor por defecto en los filtros
-  const hoy = new Date().toLocaleDateString('fr-CA'); // Formato YYYY-MM-DD
+  const hoy = new Date().toLocaleDateString('fr-CA');
   filtroInicio.value = hoy;
   filtroFin.value = hoy;
 
-  cargarOrdenes();
+  // paginación
+  document.getElementById("btnAnterior").onclick  = () => { if (paginaActual>1) { paginaActual--; mostrarOrdenes(); } };
+  document.getElementById("btnSiguiente").onclick = () => { paginaActual++; mostrarOrdenes(); };
+
+  const btnMasivo = document.getElementById("btnImprimirMasivo");
+  if (btnMasivo) btnMasivo.addEventListener("click", imprimirOrdenMasiva);
+
+  cargarOrdenes(); // ya no trae órdenes; prepara filtros y primera página
 });
+
 
