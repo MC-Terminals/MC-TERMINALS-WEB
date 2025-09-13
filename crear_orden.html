@@ -11,7 +11,6 @@
     color: white;
     font-family: 'Segoe UI', sans-serif;
   }
-
   .card {
     position: relative;
     background-color: #1b1b3a;
@@ -20,75 +19,32 @@
     margin-top: 50px;
     padding: 20px;
   }
-
-  .form-label {
-    color: white;
-    font-weight: bold;
-  }
-
-  input, select, textarea {
-    background-color: #2c2c4a;
-    color: white;
-    border: none;
-  }
-
-  input::placeholder, textarea::placeholder {
-    color: #aaa;
-  }
-
-  .logo-superior {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-  }
-
-  .logo-img {
-    width: 100px;
-    height: auto;
-  }
-
+  .form-label { color: white; font-weight: bold; }
+  input, select, textarea { background-color: #2c2c4a; color: white; border: none; }
+  input::placeholder, textarea::placeholder { color: #aaa; }
+  .logo-superior { position: absolute; top: 15px; right: 20px; }
+  .logo-img { width: 100px; height: auto; }
   .ayuda-placa { color: #fff; }
-
-
   @media (max-width: 768px) {
-    .logo-superior {
-      top: 10px;
-      right: 10px;
-    }
-
-    .logo-img {
-      width: 80px;
-    }
-
-    h3.text-white {
-      font-size: 1.3rem;
-      text-align: center;
-    }
-
-    .row .col-md-6 {
-      width: 100%;
-    }
-
-    .form-label {
-      font-size: 0.9rem;
-    }
-
-    .btn {
-      width: 100%;
-    }
+    .logo-superior { top: 10px; right: 10px; }
+    .logo-img { width: 80px; }
+    h3.text-white { font-size: 1.3rem; text-align: center; }
+    .row .col-md-6 { width: 100%; }
+    .form-label { font-size: 0.9rem; }
+    .btn { width: 100%; }
   }
-</style>
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  </style>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
   <div class="container">
     <div class="card p-4">
-        <div class="logo-superior">
-  <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" alt="Logo MC" class="logo-img">
-</div>
+      <div class="logo-superior">
+        <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" alt="Logo MC" class="logo-img">
+      </div>
       <h3 class="text-center mb-4 text-white">Crear Nueva Orden</h3>
-      <form id="ordenForm">
 
+      <form id="ordenForm">
         <div class="mb-3">
           <label class="form-label">Fecha de carga (opcional)</label>
           <input type="date" class="form-control" id="fecha_programada">
@@ -131,24 +87,14 @@
             <label class="form-label">Piloto</label>
             <input type="text" class="form-control" id="piloto" required>
           </div>
-         <div class="col-md-6">
-  <label class="form-label">Placa</label>
-  <div class="input-group">
-    <span class="input-group-text">C-</span>
-    <input
-      type="text"
-      class="form-control"
-      id="placa"
-      placeholder="123ABC"
-      maxlength="6"
-      autocomplete="off"
-      required
-    >
-  </div>
-  <small class="ayuda-placa">Ingrese 3 números y 3 letras. Ejemplo: 123ABC (el sistema agrega C-).</small>
-
-</div>
-
+          <div class="col-md-6">
+            <label class="form-label">Placa</label>
+            <div class="input-group">
+              <span class="input-group-text">C-</span>
+              <input type="text" class="form-control" id="placa" placeholder="123ABC" maxlength="6" autocomplete="off" required>
+            </div>
+            <small class="ayuda-placa">Ingrese 3 números y 3 letras. Ejemplo: 123ABC (el sistema agrega C-).</small>
+          </div>
         </div>
 
         <div class="row mb-3">
@@ -164,30 +110,20 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">Cantidad (qq)</label>
-<input
-  type="number"
-  class="form-control"
-  id="cantidad_qq"
-  required
-  min="1"
-  step="0.0001"
-  inputmode="decimal"
-/>
-
+            <input type="number" class="form-control" id="cantidad_qq" required min="1" step="0.0001" inputmode="decimal">
           </div>
         </div>
 
-       <div class="row mb-3">
-  <div class="col-md-6">
-    <label class="form-label">Nombre del Transporte</label>
-    <input type="text" class="form-control" id="nombre_transporte" placeholder="Ej. TRANSPORTE A GRANEL">
-  </div>
-
-  <div class="col-md-6">
-    <label class="form-label">No. de Orden Interna</label>
-    <input type="text" class="form-control" id="orden_interna" placeholder="Ej. ORD-2024-AZ55">
-  </div>
-</div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Nombre del Transporte</label>
+            <input type="text" class="form-control" id="nombre_transporte" placeholder="Ej. TRANSPORTE A GRANEL">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">No. de Orden Interna</label>
+            <input type="text" class="form-control" id="orden_interna" placeholder="Ej. ORD-2024-AZ55">
+          </div>
+        </div>
 
         <div class="mb-3">
           <label class="form-label">Observación</label>
@@ -197,17 +133,16 @@
         <button type="submit" class="btn btn-success w-100">Crear Orden</button>
         <div id="mensaje" class="text-center mt-3 text-white"></div>
         <button type="button" class="btn btn-primary w-100 mt-2" onclick="window.location.href='ingreso_masivo.html'">Ingreso Masivo</button>
-
       </form>
     </div>
   </div>
 
   <div class="text-center mt-4">
-  <button class="btn btn-outline-light" onclick="window.location.href='menu.html'">Regresar al Menú</button>
-</div>
+    <button class="btn btn-outline-light" onclick="window.location.href='menu.html'">Regresar al Menú</button>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
     const supabase = window.supabase.createClient(
       'https://fpqnzqrdyxmhptosplos.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c'
@@ -217,397 +152,368 @@
     const mensaje = document.getElementById("mensaje");
 
     const blSelect = document.getElementById("bl");
-const productoSelect = document.getElementById("producto");
+    const productoSelect = document.getElementById("producto");
 
+    blSelect.addEventListener("mousedown", (e) => {
+      const buque = document.getElementById("buque").value;
+      if (!buque) {
+        e.preventDefault();
+        mensaje.innerText = "⚠️ Primero debes seleccionar un buque.";
+        mensaje.style.color = "orange";
+      }
+    });
 
+    productoSelect.addEventListener("mousedown", (e) => {
+      const bl = document.getElementById("bl").value;
+      if (!bl) {
+        e.preventDefault();
+        mensaje.innerText = "⚠️ Primero debes seleccionar una poliza.";
+        mensaje.style.color = "orange";
+      }
+    });
 
-blSelect.addEventListener("mousedown", (e) => {
-  const buque = document.getElementById("buque").value;
-  if (!buque) {
-    e.preventDefault(); // Evita abrir el menú desplegable
-    mensaje.innerText = "⚠️ Primero debes seleccionar un buque.";
-    mensaje.style.color = "orange";
-  }
-});
-
-productoSelect.addEventListener("mousedown", (e) => {
-  const bl = document.getElementById("bl").value;
-  if (!bl) {
-    e.preventDefault();
-    mensaje.innerText = "⚠️ Primero debes seleccionar una poliza.";
-    mensaje.style.color = "orange";
-  }
-});
-
-function parseCantidadQQ(v) {
-  if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
-
-  let s = String(v).trim().replace(/\s/g, "");
-  const hasDot = s.includes(".");
-  const hasComma = s.includes(",");
-
-  if (hasDot && hasComma) {
-    // decide según el último separador
-    const lastDot = s.lastIndexOf(".");
-    const lastComma = s.lastIndexOf(",");
-    if (lastComma > lastDot) {
-      // 1.234,56 -> 1234.56
-      s = s.replace(/\./g, "").replace(",", ".");
-    } else {
-      // 1,234.56 -> 1234.56
-      s = s.replace(/,/g, "");
+    function parseCantidadQQ(v) {
+      if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
+      let s = String(v).trim().replace(/\s/g, "");
+      const hasDot = s.includes(".");
+      const hasComma = s.includes(",");
+      if (hasDot && hasComma) {
+        const lastDot = s.lastIndexOf(".");
+        const lastComma = s.lastIndexOf(",");
+        if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+        else s = s.replace(/,/g, "");
+      } else if (hasComma && !hasDot) {
+        s = s.replace(",", ".");
+      }
+      const n = parseFloat(s);
+      if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
+      if (n < 1) return { ok: false, error: "La cantidad debe ser ≥ 1" };
+      return { ok: true, valor: Number(n.toFixed(4)) };
     }
-  } else if (hasComma && !hasDot) {
-    // solo coma = decimal
-    s = s.replace(",", ".");
-  }
 
-  const n = parseFloat(s);
-  if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
-  if (n < 1) return { ok: false, error: "La cantidad debe ser ≥ 1" };
-  return { ok: true, valor: Number(n.toFixed(4)) }; // 4 decimales máximo
-}
-
+    // === Helpers de fecha/hora en Guatemala (UTC-06:00) ===
+    function isoAhoraGuatemala() {
+      const tz = "America/Guatemala";
+      const s = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: tz,
+        year:"numeric", month:"2-digit", day:"2-digit",
+        hour:"2-digit", minute:"2-digit", second:"2-digit",
+        hour12:false
+      }).format(new Date()); // "YYYY-MM-DD HH:mm:ss"
+      return s.replace(" ", "T") + "-06:00";
+    }
+    function hoyGuatemalaYYYYMMDD() {
+      const tz = "America/Guatemala";
+      const s = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit"
+      }).format(new Date());
+      return s.split(" ")[0];
+    }
 
     form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+      e.preventDefault();
 
-  const nombre_transporte = document.getElementById("nombre_transporte").value.trim();
-const no_orden_interna = document.getElementById("orden_interna").value.trim();
+      const nombre_transporte = document.getElementById("nombre_transporte").value.trim();
+      const no_orden_interna = document.getElementById("orden_interna").value.trim();
 
- const inputFecha = document.getElementById("fecha_programada").value;
-let fecha_generada;
+      // Validación de fecha programada (no pasada). NO se usa para el reloj de 24h.
+      const inputFecha = document.getElementById("fecha_programada").value;
+      if (inputFecha) {
+        const hoyGT = hoyGuatemalaYYYYMMDD();
+        if (inputFecha < hoyGT) {
+          mensaje.innerText = "⚠️ No se permiten fechas pasadas.";
+          mensaje.style.color = "orange";
+          return;
+        }
+      }
 
-if (inputFecha) {
-  const hoy = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
-  if (inputFecha >= hoy) {
-    fecha_generada = new Date(inputFecha + "T00:00:00").toLocaleString('sv-SE'); // ✅ para Supabase
-  } else {
-    mensaje.innerText = "⚠️ No se permiten fechas pasadas.";
-    mensaje.style.color = "orange";
-    return;
-  }
-} else {
-  fecha_generada = new Date().toLocaleString('sv-SE'); // ✅ hoy
-}
+      // Fechas para control 24h (ahora en Guatemala)
+      const fecha_generada = isoAhoraGuatemala();
+      const fecha_creada   = isoAhoraGuatemala();
 
+      const nit_usuario = localStorage.getItem("nit");
+      const piloto = document.getElementById("piloto").value.trim();
+      const placaRaw = document.getElementById("placa").value.trim().toUpperCase();
+      if (!/^\d{3}[A-Z]{3}$/.test(placaRaw)) {
+        mensaje.innerText = "Placa inválida. Debe escribir 3 números seguidos de 3 letras, por ejemplo: 123ABC. El sistema agregará C- automáticamente.";
+        mensaje.style.color = "orange";
+        return;
+      }
+      const placa = `C-${placaRaw}`;
 
-  const nit_usuario = localStorage.getItem("nit");
-  const piloto = document.getElementById("piloto").value.trim();
-  const placaRaw = document.getElementById("placa").value.trim().toUpperCase();
-if (!/^\d{3}[A-Z]{3}$/.test(placaRaw)) {
-  mensaje.innerText = "Placa inválida. Debe escribir 3 números seguidos de 3 letras, por ejemplo: 123ABC. El sistema agregará C- automáticamente.";
-  mensaje.style.color = "orange";
-  return;
-}
-const placa = `C-${placaRaw}`; // ← se guarda con C- automáticamente
+      const tipo_unidad = document.getElementById("tipo_unidad").value;
+      const producto = document.getElementById("producto").value;
+      const bodega = document.getElementById("bodega").value;
 
-  const tipo_unidad = document.getElementById("tipo_unidad").value;
-  const producto = document.getElementById("producto").value;
-  const bodega = document.getElementById("bodega").value;
-const cantRes = parseCantidadQQ(document.getElementById("cantidad_qq").value);
-if (!cantRes.ok) {
-  mensaje.innerText = `⚠️ ${cantRes.error}`;
-  mensaje.style.color = "orange";
-  return;
-}
-const cantidad_qq = cantRes.valor;
-const cantidad_ton = Number((cantidad_qq / 22.046).toFixed(2));
+      const cantRes = parseCantidadQQ(document.getElementById("cantidad_qq").value);
+      if (!cantRes.ok) {
+        mensaje.innerText = `⚠️ ${cantRes.error}`;
+        mensaje.style.color = "orange";
+        return;
+      }
+      const cantidad_qq = cantRes.valor;
+      // ⛔ NO calcular ni enviar cantidad_ton: es columna generada en la DB
 
-  const buque = document.getElementById("buque").value.trim();
-  const bl = document.getElementById("bl").value.trim();
-  const observacion = document.getElementById("observacion").value.trim();
+      const buque = document.getElementById("buque").value.trim();
+      const bl = document.getElementById("bl").value.trim();
+      const observacion = document.getElementById("observacion").value.trim();
 
-  if (!piloto || !placa || !tipo_unidad || !producto || !bodega || !buque || !bl) {
-  mensaje.innerText = "Por favor llena todos los campos requeridos.";
-  mensaje.style.color = "orange";
-  return;
-}
+      if (!piloto || !placa || !tipo_unidad || !producto || !bodega || !buque || !bl) {
+        mensaje.innerText = "Por favor llena todos los campos requeridos.";
+        mensaje.style.color = "orange";
+        return;
+      }
+      if (!nit_usuario) {
+        mensaje.innerText = "Error: Usuario no autenticado.";
+        return;
+      }
 
+      const payload = {
+        nit_usuario,
+        piloto,
+        placa,
+        tipo_unidad,
+        producto,
+        bodega,
+        cantidad_qq,           // ✅ Solo esto; la DB calculará cantidad_ton
+        buque,
+        bl,
+        nombre_transporte,
+        no_orden_interna,
+        observacion,
+        fecha_generada,
+        fecha_creada
+      };
 
+      const { error } = await supabase.from("ordenes").insert([payload]);
 
-  if (!nit_usuario) {
-    mensaje.innerText = "Error: Usuario no autenticado.";
-    return;
-  }
-
- const fecha_creada = new Date().toLocaleString('sv-SE'); // 🆕 Fecha y hora actual reales
-
-
-  const { error } = await supabase.from("ordenes").insert([{
-    nit_usuario,
-    piloto,
-    placa,
-    tipo_unidad,
-    producto,
-    bodega,
-    cantidad_qq,
-    buque,
-    bl,
-    nombre_transporte,
-no_orden_interna,
-    observacion,
-    fecha_generada,
-    fecha_creada
-  }]);
-
-  if (error) {
-    console.error("Error al crear orden:", error);
-    mensaje.innerText = "No se pudo crear la orden.";
-  } else {
-    mensaje.style.color = "lightgreen";
-    mensaje.innerText = "¡Orden creada exitosamente!";
-    setTimeout(() => {
-      window.location.href = "menu.html";
-    }, 2000);
-  }
-});
-
+      if (error) {
+        console.error("Error al crear orden:", error);
+        mensaje.innerText = "No se pudo crear la orden.";
+      } else {
+        mensaje.style.color = "lightgreen";
+        mensaje.innerText = "¡Orden creada exitosamente!";
+        setTimeout(() => { window.location.href = "menu.html"; }, 2000);
+      }
+    });
   </script>
-<script>
-const rol = localStorage.getItem("rol");
-const nit_usuario = localStorage.getItem("nit");
-let todosBLs = []; // cache temporal
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await cargarBuques();
+  <script>
+    const rol = localStorage.getItem("rol");
+    const nit_usuario = localStorage.getItem("nit");
+    let todosBLs = [];
 
-  document.getElementById("buque").addEventListener("change", mostrarBLsDelBuque);
-  document.getElementById("bl").addEventListener("change", mostrarProductoDelBL);
-});
+    document.addEventListener("DOMContentLoaded", async () => {
+      await cargarBuques();
+      document.getElementById("buque").addEventListener("change", mostrarBLsDelBuque);
+      document.getElementById("bl").addEventListener("change", mostrarProductoDelBL);
+    });
 
-async function cargarBuques() {
-  const selectBuque = document.getElementById("buque");
-  const blSelect = document.getElementById("bl");
-  const productoSelect = document.getElementById("producto");
+    async function cargarBuques() {
+      const selectBuque = document.getElementById("buque");
+      const blSelect = document.getElementById("bl");
+      const productoSelect = document.getElementById("producto");
 
-  // Estado inicial
-  selectBuque.innerHTML   = `<option value="">Seleccione un buque...</option>`;
-  blSelect.innerHTML      = `<option value="">Seleccione una poliza...</option>`;
-  productoSelect.innerHTML= `<option value="">Seleccione un producto...</option>`;
-  selectBuque.disabled = false;
-  blSelect.disabled = true;
-  productoSelect.disabled = true;
+      selectBuque.innerHTML = `<option value="">Seleccione un buque...</option>`;
+      blSelect.innerHTML = `<option value="">Seleccione una poliza...</option>`;
+      productoSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
+      selectBuque.disabled = false;
+      blSelect.disabled = true;
+      productoSelect.disabled = true;
 
-  try {
-    let buques = [];
+      try {
+        let buques = [];
 
-    if (rol === "consignatario") {
-      // 1) Traer BLs del NIT actual
-      const { data: blsData, error: e1 } = await supabase
-        .from("bls_producto")
-        .select("id_producto_buque")
-        .eq("nit_empresa", nit_usuario);
+        if (rol === "consignatario") {
+          const { data: blsData, error: e1 } = await supabase
+            .from("bls_producto")
+            .select("id_producto_buque")
+            .eq("nit_empresa", nit_usuario);
+          if (e1) throw e1;
 
-      if (e1) throw e1;
+          const idsProducto = [...new Set((blsData || []).map(b => b.id_producto_buque))];
+          if (idsProducto.length === 0) {
+            selectBuque.disabled = true;
+            blSelect.disabled = true;
+            productoSelect.disabled = true;
+            const mensaje = document.getElementById("mensaje");
+            mensaje.textContent = "No tiene pólizas (BL) asignadas.";
+            mensaje.style.color = "orange";
+            return;
+          }
 
-      const idsProducto = [...new Set((blsData || []).map(b => b.id_producto_buque))];
+          const { data: productosData, error: e2 } = await supabase
+            .from("productos_buque")
+            .select("id, id_buque")
+            .in("id", idsProducto);
+          if (e2) throw e2;
 
-      if (idsProducto.length === 0) {
-        // No tiene BLs: bloquear combos dependientes
-        selectBuque.disabled = true;
-        blSelect.disabled = true;
-        productoSelect.disabled = true;
-        mensaje.textContent = "No tiene pólizas (BL) asignadas.";
+          const idsBuques = [...new Set((productosData || []).map(p => p.id_buque))];
+          if (idsBuques.length === 0) {
+            selectBuque.disabled = true;
+            blSelect.disabled = true;
+            productoSelect.disabled = true;
+            const mensaje = document.getElementById("mensaje");
+            mensaje.textContent = "No hay buques disponibles para sus BL.";
+            mensaje.style.color = "orange";
+            return;
+          }
+
+          const { data: buquesData, error: e3 } = await supabase
+            .from("buques")
+            .select("id, nombre")
+            .in("id", idsBuques)
+            .order("nombre", { ascending: true });
+          if (e3) throw e3;
+
+          buques = buquesData || [];
+        } else {
+          const { data, error } = await supabase
+            .from("buques")
+            .select("id, nombre")
+            .order("nombre", { ascending: true });
+          if (error) throw error;
+          buques = data || [];
+        }
+
+        buques.forEach(b => {
+          const opt = document.createElement("option");
+          opt.value = b.id;
+          opt.textContent = b.nombre;
+          selectBuque.appendChild(opt);
+        });
+
+        blSelect.disabled = false;
+      } catch (err) {
+        console.error("Error cargando buques:", err);
+        const mensaje = document.getElementById("mensaje");
+        mensaje.textContent = "Error cargando buques.";
         mensaje.style.color = "orange";
+      }
+    }
+
+    async function mostrarBLsDelBuque() {
+      const buqueId = document.getElementById("buque").value;
+      const blSelect = document.getElementById("bl");
+      const productoSelect = document.getElementById("producto");
+
+      blSelect.innerHTML = `<option value="">Seleccione una poliza...</option>`;
+      productoSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
+      productoSelect.disabled = true;
+
+      if (!buqueId) {
+        blSelect.disabled = true;
         return;
       }
 
-      // 2) A partir de esos productos, obtener buques
-      const { data: productosData, error: e2 } = await supabase
-        .from("productos_buque")
-        .select("id, id_buque")
-        .in("id", idsProducto);
+      try {
+        const { data: productos, error: eProd } = await supabase
+          .from("productos_buque")
+          .select("id, producto")
+          .eq("id_buque", buqueId);
+        if (eProd) throw eProd;
 
-      if (e2) throw e2;
+        const idsProducto = (productos || []).map(p => p.id);
+        if (idsProducto.length === 0) {
+          blSelect.disabled = true;
+          const mensaje = document.getElementById("mensaje");
+          mensaje.textContent = "Este buque no tiene productos disponibles.";
+          mensaje.style.color = "orange";
+          return;
+        }
 
-      const idsBuques = [...new Set((productosData || []).map(p => p.id_buque))];
+        let query = supabase
+          .from("bls_producto")
+          .select("bl, id_producto_buque, nit_empresa")
+          .in("id_producto_buque", idsProducto);
 
-      if (idsBuques.length === 0) {
-        selectBuque.disabled = true;
-        blSelect.disabled = true;
-        productoSelect.disabled = true;
-        mensaje.textContent = "No hay buques disponibles para sus BL.";
+        const rol = localStorage.getItem("rol");
+        const nit_usuario = localStorage.getItem("nit");
+        if (rol === "consignatario") {
+          query = query.eq("nit_empresa", nit_usuario);
+        }
+
+        const { data: bls, error: eBL } = await query;
+        if (eBL) throw eBL;
+
+        window.todosBLs = (bls || []).map(b => ({
+          bl: b.bl,
+          id_producto_buque: b.id_producto_buque,
+          producto: (productos.find(p => p.id === b.id_producto_buque) || {}).producto || ""
+        }));
+
+        if (rol === "consignatario" && window.todosBLs.length === 0) {
+          blSelect.disabled = true;
+          const mensaje = document.getElementById("mensaje");
+          mensaje.textContent = "Este buque no tiene pólizas (BL) asignadas a su empresa.";
+          mensaje.style.color = "orange";
+          return;
+        }
+
+        blSelect.disabled = false;
+        window.todosBLs.forEach(b => {
+          const opt = document.createElement("option");
+          opt.value = b.bl;
+          opt.textContent = b.bl;
+          blSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Error listando BL:", err);
+        const mensaje = document.getElementById("mensaje");
+        mensaje.textContent = "Error cargando pólizas.";
         mensaje.style.color = "orange";
-        return;
       }
-
-      const { data: buquesData, error: e3 } = await supabase
-        .from("buques")
-        .select("id, nombre")
-        .in("id", idsBuques)
-        .order("nombre", { ascending: true });
-
-      if (e3) throw e3;
-      buques = buquesData || [];
-    } else {
-      // Admin/operador: todos los buques
-      const { data, error } = await supabase
-        .from("buques")
-        .select("id, nombre")
-        .order("nombre", { ascending: true });
-      if (error) throw error;
-      buques = data || [];
     }
 
-    // Pintar opciones
-    buques.forEach(b => {
-      const opt = document.createElement("option");
-      opt.value = b.id;
-      opt.textContent = b.nombre;
-      selectBuque.appendChild(opt);
+    function mostrarProductoDelBL() {
+      const blSeleccionado = document.getElementById("bl").value;
+      const prodSelect = document.getElementById("producto");
+
+      prodSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
+      prodSelect.disabled = true;
+
+      const producto = (window.todosBLs || []).find(b => b.bl === blSeleccionado)?.producto;
+      if (producto) {
+        const opt = document.createElement("option");
+        opt.value = producto;
+        opt.textContent = producto;
+        prodSelect.appendChild(opt);
+        prodSelect.value = producto;
+        prodSelect.disabled = true;
+      }
+    }
+
+    // Validación de placa (input)
+    const placaInput = document.getElementById("placa");
+    placaInput.addEventListener("input", (e) => {
+      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const numeros = v.slice(0, 3).replace(/\D/g, "");
+      const letras  = v.slice(3, 6).replace(/[^A-Z]/g, "");
+      e.target.value = (numeros + letras).slice(0, 6);
     });
-
-    // Habilitar BL al menos cuando se elige buque
-    blSelect.disabled = false;
-  } catch (err) {
-    console.error("Error cargando buques:", err);
-    mensaje.textContent = "Error cargando buques.";
-    mensaje.style.color = "orange";
-  }
-}
-
-
-async function mostrarBLsDelBuque() {
-  const buqueId = document.getElementById("buque").value;
-  const blSelect = document.getElementById("bl");
-  const productoSelect = document.getElementById("producto");
-
-  // Reset dependientes
-  blSelect.innerHTML = `<option value="">Seleccione una poliza...</option>`;
-  productoSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
-  productoSelect.disabled = true;
-
-  if (!buqueId) {
-    blSelect.disabled = true;
-    return;
-  }
-
-  try {
-    // 1) Productos del buque elegido
-    const { data: productos, error: eProd } = await supabase
-      .from("productos_buque")
-      .select("id, producto")
-      .eq("id_buque", buqueId);
-
-    if (eProd) throw eProd;
-
-    const idsProducto = (productos || []).map(p => p.id);
-    if (idsProducto.length === 0) {
-      blSelect.disabled = true;
-      mensaje.textContent = "Este buque no tiene productos disponibles.";
-      mensaje.style.color = "orange";
-      return;
-    }
-
-    // 2) BLs para esos productos
-    let query = supabase
-      .from("bls_producto")
-      .select("bl, id_producto_buque, nit_empresa")
-      .in("id_producto_buque", idsProducto);
-
-    // Filtrado clave: solo BL del consignatario
-    if (rol === "consignatario") {
-      query = query.eq("nit_empresa", nit_usuario);
-    }
-
-    const { data: bls, error: eBL } = await query;
-    if (eBL) throw eBL;
-
-    // Guardar relación BL ↔ producto para autocompletar
-    todosBLs = (bls || []).map(b => ({
-      bl: b.bl,
-      id_producto_buque: b.id_producto_buque,
-      producto: (productos.find(p => p.id === b.id_producto_buque) || {}).producto || ""
-    }));
-
-    // Si no hay BLs válidos para este NIT, informar y bloquear
-    if (rol === "consignatario" && todosBLs.length === 0) {
-      blSelect.disabled = true;
-      mensaje.textContent = "Este buque no tiene pólizas (BL) asignadas a su empresa.";
-      mensaje.style.color = "orange";
-      return;
-    }
-
-    // 3) Pintar BLs
-    blSelect.disabled = false;
-    todosBLs.forEach(b => {
-      const opt = document.createElement("option");
-      opt.value = b.bl;
-      opt.textContent = b.bl;
-      blSelect.appendChild(opt);
+    placaInput.addEventListener("blur", () => {
+      const ok = /^\d{3}[A-Z]{3}$/.test(placaInput.value);
+      const mensaje = document.getElementById("mensaje");
+      if (placaInput.value && !ok) {
+        mensaje.innerText = "Placa inválida. Formato requerido: C-123ABC (usted solo escribe 123ABC).";
+        mensaje.style.color = "orange";
+        placaInput.focus();
+      } else if (ok) {
+        mensaje.innerText = "";
+      }
     });
-  } catch (err) {
-    console.error("Error listando BL:", err);
-    mensaje.textContent = "Error cargando pólizas.";
-    mensaje.style.color = "orange";
-  }
-}
+  </script>
 
-
-
-
-function mostrarProductoDelBL() {
-  const blSeleccionado = document.getElementById("bl").value;
-  const prodSelect = document.getElementById("producto");
-
-  prodSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
-  prodSelect.disabled = true;
-
-  const producto = todosBLs.find(b => b.bl === blSeleccionado)?.producto;
-  if (producto) {
-    const opt = document.createElement("option");
-    opt.value = producto;
-    opt.textContent = producto;
-    prodSelect.appendChild(opt);
-    prodSelect.value = producto;
-    prodSelect.disabled = true; // bloqueado para que no lo cambien
-  }
-}
-
-
-  // === NUEVO: validación de placa (input) ===
-  const placaInput = document.getElementById("placa");
-
-  // Restringe a 3 dígitos + 3 letras y fuerza mayúsculas
-  placaInput.addEventListener("input", (e) => {
-    let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const numeros = v.slice(0, 3).replace(/\D/g, "");   // solo dígitos en los 3 primeros
-    const letras  = v.slice(3, 6).replace(/[^A-Z]/g, ""); // solo letras en los 3 últimos
-    e.target.value = (numeros + letras).slice(0, 6);
-  });
-
-  // Mensaje si sale del campo con formato incorrecto
-  placaInput.addEventListener("blur", () => {
-    const ok = /^\d{3}[A-Z]{3}$/.test(placaInput.value);
-    if (placaInput.value && !ok) {
-      mensaje.innerText = "Placa inválida. Formato requerido: C-123ABC (usted solo escribe 123ABC).";
-      mensaje.style.color = "orange";
-      placaInput.focus();
-    } else if (ok) {
-      mensaje.innerText = "";
-    }
-  });
-
-
-</script>
-
-<script>
+  <script>
     // Seguridad: sesión obligatoria
     if (!localStorage.getItem("nit")) {
       window.location.replace("login.html");
     }
-
     // Bloqueo de retroceso
     history.pushState(null, null, location.href);
-    window.onpopstate = function () {
-      history.pushState(null, null, location.href);
-    };
+    window.onpopstate = function () { history.pushState(null, null, location.href); };
   </script>
   <script src="guard_bloqueo.js"></script>
   <script src="mensajes_globales.js"></script>
-
 </body>
-
-
 </html>

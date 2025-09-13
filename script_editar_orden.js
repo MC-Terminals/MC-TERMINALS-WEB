@@ -10,7 +10,6 @@ const form = document.getElementById("formEditarOrden");
 const mensaje = document.getElementById("mensaje");
 const fechaInput = document.getElementById("fecha_programada");
 
-
 const placaInput = document.getElementById("placa");
 const pilotoInput = document.getElementById("piloto");
 const productoSelect = document.getElementById("producto");
@@ -23,9 +22,20 @@ const observacionInput = document.getElementById("observacion");
 const nombreTransporteInput = document.getElementById("nombre_transporte");
 const noOrdenInternaInput = document.getElementById("no_orden_interna");
 
-
 let todosLosBuques = [];
 let buqueBLProducto = {}; // buque → bl → producto
+
+// 🔧 NUEVO: helper para “ahora” en Guatemala con TZ explícita
+function isoAhoraGuatemala() {
+  const tz = "America/Guatemala";
+  const s = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: tz,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  }).format(new Date()); // "YYYY-MM-DD HH:mm:ss" en GT
+  return s.replace(" ", "T") + "-06:00"; // "YYYY-MM-DDTHH:mm:ss-06:00"
+}
 
 async function cargarBuques() {
   const { data, error } = await supabase
@@ -46,7 +56,6 @@ async function cargarBuques() {
     option.textContent = buque.nombre;
     buqueSelect.appendChild(option);
 
-    // Estructura: buque -> { bl1: prod1, bl2: prod2, ... }
     const blProducto = {};
     buque.productos_buque.forEach(p => {
       p.bls_producto.forEach(bl => {
@@ -82,8 +91,7 @@ buqueSelect.addEventListener("change", () => {
     });
   }
   productoSelect.value = '';
-blSelect.value = '';
-
+  blSelect.value = '';
 });
 
 blSelect.addEventListener("change", () => {
@@ -92,8 +100,6 @@ blSelect.addEventListener("change", () => {
 
   if (buqueBLProducto[buqueId] && buqueBLProducto[buqueId][blValue]) {
     const productoRelacionado = buqueBLProducto[buqueId][blValue];
-
-    // Filtrar productos válidos para el buque
     const productosUnicos = [...new Set(Object.values(buqueBLProducto[buqueId]))];
 
     productoSelect.innerHTML = '<option value="">Seleccione producto</option>';
@@ -104,11 +110,9 @@ blSelect.addEventListener("change", () => {
       productoSelect.appendChild(opt);
     });
 
-    // Seleccionamos automáticamente el relacionado
     productoSelect.value = productoRelacionado;
   }
 });
-
 
 productoSelect.addEventListener("change", () => {
   const buqueId = buqueSelect.value;
@@ -127,7 +131,6 @@ productoSelect.addEventListener("change", () => {
       blSelect.appendChild(opt);
     });
 
-    // Si el BL actual no es válido, lo limpiamos
     if (!blsRelacionados.includes(blSelect.value)) {
       blSelect.value = '';
     }
@@ -153,11 +156,6 @@ placaInput.addEventListener("blur", () => {
   }
 });
 
-
-
-
-
-
 async function cargarDatosOrden() {
   if (!ordenId) {
     mensaje.innerText = "Orden no especificada.";
@@ -181,11 +179,11 @@ async function cargarDatosOrden() {
   bodegaSelect.value = data.bodega;
   tipoUnidadSelect.value = data.tipo_unidad;
   cantidadInput.value = data.cantidad_qq;
+  // dejamos esta línea como la tienes para no romper nada más
   fechaInput.value = data.fecha_generada ? data.fecha_generada.split("T")[0] : "";
   observacionInput.value = data.observacion || "";
   nombreTransporteInput.value = data.nombre_transporte || "";
-noOrdenInternaInput.value = data.no_orden_interna || "";
-
+  noOrdenInternaInput.value = data.no_orden_interna || "";
 
   await cargarBuques();
 
@@ -219,42 +217,26 @@ function obtenerFechaHoraGuatemala() {
 
 function parseCantidadQQ(v) {
   if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
-
-  // Si ya viene como número desde xlsx, úsalo directo
   if (typeof v === "number") {
     if (v < 1) return { ok: false, error: "debe ser ≥ 1" };
     return { ok: true, valor: Number(v.toFixed(4)) };
   }
-
   let s = String(v).trim().replace(/\s/g, "");
   const hasDot = s.includes(".");
   const hasComma = s.includes(",");
-
   if (hasDot && hasComma) {
-    // Decide según el último separador usado
     const lastDot = s.lastIndexOf(".");
     const lastComma = s.lastIndexOf(",");
-    if (lastComma > lastDot) {
-      // 1.234,56 -> 1234.56
-      s = s.replace(/\./g, "").replace(",", ".");
-    } else {
-      // 1,234.56 -> 1234.56
-      s = s.replace(/,/g, "");
-    }
+    if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+    else s = s.replace(/,/g, "");
   } else if (hasComma && !hasDot) {
-    // Solo coma -> trátala como decimal (458,770 -> 458.770)
     s = s.replace(",", ".");
   }
-  // Solo punto o sin separadores: se queda igual
-
   const n = parseFloat(s);
   if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
   if (n < 1) return { ok: false, error: "debe ser ≥ 1" };
-
-  return { ok: true, valor: Number(n.toFixed(4)) }; // ajustado a 4 decimales
+  return { ok: true, valor: Number(n.toFixed(4)) };
 }
-
-
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -269,21 +251,20 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // 1) Validar placa ANTES de armar el objeto
   const placaRaw = placaInput.value.trim().toUpperCase();
   if (!/^\d{3}[A-Z]{3}$/.test(placaRaw)) {
     alert("Placa inválida. Debe escribir 3 números seguidos de 3 letras, por ejemplo: 123ABC. El sistema agregará C- automáticamente.");
     return;
   }
 
-  // validar cantidad antes de armar nuevosDatos
-const cantRes = parseCantidadQQ(cantidadInput.value);
-if (!cantRes.ok) {
-  alert(`Cantidad (qq) ${cantRes.error}.`);
-  return;
-}
-  // Datos nuevos ingresados
-   const nuevosDatos = {
+  const cantRes = parseCantidadQQ(cantidadInput.value);
+  if (!cantRes.ok) {
+    alert(`Cantidad (qq) ${cantRes.error}.`);
+    return;
+  }
+
+  // 🔧 CAMBIO CLAVE: fecha_generada = AHORA en Guatemala (reinicia 24h)
+  const nuevosDatos = {
     placa: `C-${placaRaw}`,
     piloto: pilotoInput.value.trim(),
     producto: productoSelect.value,
@@ -293,12 +274,11 @@ if (!cantRes.ok) {
     buque: buqueSelect.value,
     bl: blSelect.value,
     observacion: observacionInput.value.trim(),
-    fecha_generada: fechaSeleccionada + " 00:00:00",
+    fecha_generada: isoAhoraGuatemala(),   // ⬅️ antes: fechaSeleccionada + " 00:00:00"
     nombre_transporte: nombreTransporteInput.value.trim(),
     no_orden_interna: noOrdenInternaInput.value.trim(),
   };
 
-  // Obtener datos actuales de la orden antes de actualizar
   const { data: datosPrevios, error: errorPrevios } = await supabase
     .from("ordenes")
     .select("*")
@@ -311,7 +291,6 @@ if (!cantRes.ok) {
     return;
   }
 
-  // Detectar si hubo cambios reales (excluyendo fecha_generada para historial)
   let huboCambios = false;
   const cambios = [];
 
@@ -335,18 +314,15 @@ if (!cantRes.ok) {
     return;
   }
 
-  // Guardar historial solo si hubo cambios en otros campos (no fecha)
   if (cambios.length > 0) {
     const { error: errorHistorial } = await supabase
       .from("historial_ordenes")
       .insert(cambios);
-
     if (errorHistorial) {
       console.error("Error al guardar historial de modificaciones:", errorHistorial);
     }
   }
 
-  // Actualizar la orden
   const { error: errorActualizacion } = await supabase
     .from("ordenes")
     .update(nuevosDatos)
@@ -364,11 +340,5 @@ if (!cantRes.ok) {
   }
 });
 
-
-
-
 document.addEventListener("DOMContentLoaded", cargarDatosOrden);
-
-
-
 document.addEventListener("DOMContentLoaded", cargarDatosOrden);

@@ -8,8 +8,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-
-
  <style>
   body {
     background-color: #0e0e2c;
@@ -151,7 +149,6 @@ const supabase = window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c'
 );
 
-
 let datosExcel = [];
 const rol = localStorage.getItem("rol");
 const nit = localStorage.getItem("nit");
@@ -164,7 +161,6 @@ const excelInput = document.getElementById("excelInput");
 excelInput.addEventListener("click", () => {
   excelInput.value = "";
 });
-
 
 document.addEventListener("DOMContentLoaded", async () => {
   await cargarBuques();
@@ -235,8 +231,6 @@ async function cargarBuques() {
   }
 }
 
-
-
 async function mostrarBLsDelBuque() {
   const buqueId = document.getElementById("buque").value;
 
@@ -298,7 +292,6 @@ async function mostrarBLsDelBuque() {
   });
 }
 
-
 function mostrarProductoDelBL() {
   const blSeleccionado = document.getElementById("bl").value;
   const producto = todosBLs.find(b => b.bl === blSeleccionado)?.producto;
@@ -338,8 +331,6 @@ excelInput.addEventListener("change", function (e) {
   reader.readAsArrayBuffer(e.target.files[0]);
 });
 
-
-
 function descargarPlantilla() {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
@@ -369,8 +360,6 @@ function limpiarFormulario() {
   // Limpiar mensaje
   document.getElementById("mensaje").innerText = "";
 }
-
-
 
 function validarYNormalizarPlaca(raw) {
   if (raw === undefined || raw === null) {
@@ -409,7 +398,6 @@ function validarYNormalizarPlaca(raw) {
 
   return { ok: true, placa: `C-${cuerpo}` };
 }
-
 
 const toStr = (v) => (v == null ? "" : String(v).trim());
 
@@ -450,8 +438,6 @@ function parseCantidadQQ(v) {
   return { ok: true, valor: Number(n.toFixed(4)) }; // ajustado a 4 decimales
 }
 
-
-
 function renderTablaPreview() {
   const tbody = document.querySelector("#tablaPreview tbody");
   tbody.innerHTML = "";
@@ -476,8 +462,6 @@ function renderTablaPreview() {
   });
 }
 
-
-
 async function crearMasivas() {
   const mensaje = document.getElementById("mensaje");
   mensaje.innerText = "";
@@ -495,67 +479,75 @@ async function crearMasivas() {
     return;
   }
 
-  const fecha_generada = fechaInput
-    ? new Date(fechaInput + "T00:00:00").toLocaleString("sv-SE")
-    : new Date().toLocaleString("sv-SE");
-  const fecha_creada = new Date().toLocaleString("sv-SE");
-
-const errores = [];
-const ordenes = [];
-
-datosExcel.forEach((row, idx) => {
-  const fila = idx + 2; // 1 = encabezado
-
-  // Normalizar y validar placa
-  const placaRaw = toStr(row["Placa"]);
-  const res = validarYNormalizarPlaca(placaRaw);
-
-  if (!res.ok) {
-    errores.push(`Fila ${fila}: "${placaRaw}" → ${res.error}`);
-    return;
+  // ✅ Validación necesaria: no permitir fecha de carga pasada
+  let fecha_generada;
+  if (fechaInput) {
+    const hoy = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
+    if (fechaInput >= hoy) {
+      fecha_generada = new Date(fechaInput + "T00:00:00").toLocaleString("sv-SE");
+    } else {
+      mensaje.innerText = "⚠️ No se permiten fechas pasadas.";
+      mensaje.style.color = "orange";
+      return;
+    }
+  } else {
+    fecha_generada = new Date().toLocaleString("sv-SE"); // hoy
   }
 
-const cantRes = parseCantidadQQ(row["Cantidad (qq)"]);
-if (!cantRes.ok) {
-  errores.push(`Fila ${fila}: Cantidad (qq) ${cantRes.error}. Valor: "${row["Cantidad (qq)"]}"`);
-  return;
-}
-const cantidad = cantRes.valor;
+  const fecha_creada = new Date().toLocaleString("sv-SE");
 
-  // (Opcional) si quieres bloquear cantidades <= 0:
-  // if (!(cantidad > 0)) { errores.push(`Fila ${fila}: Cantidad (qq) debe ser mayor a 0.`); return; }
+  const errores = [];
+  const ordenes = [];
 
-  ordenes.push({
-    nit_usuario: nit,
-    piloto: toStr(row["Piloto"]),
-    placa: res.placa, // ← ya normalizada a C-###
-    tipo_unidad,
-    producto,
-    buque,
-    bl,
-    bodega,
-    cantidad_qq: cantidad,
-    nombre_transporte: toStr(row["Nombre Transporte"]),
-    no_orden_interna: toStr(row["No. Orden Interna"]),
-    observacion: toStr(row["Observación"]),
-    fecha_generada,
-    fecha_creada,
+  datosExcel.forEach((row, idx) => {
+    const fila = idx + 2; // 1 = encabezado
+
+    // Normalizar y validar placa
+    const placaRaw = toStr(row["Placa"]);
+    const res = validarYNormalizarPlaca(placaRaw);
+
+    if (!res.ok) {
+      errores.push(`Fila ${fila}: "${placaRaw}" → ${res.error}`);
+      return;
+    }
+
+    const cantRes = parseCantidadQQ(row["Cantidad (qq)"]);
+    if (!cantRes.ok) {
+      errores.push(`Fila ${fila}: Cantidad (qq) ${cantRes.error}. Valor: "${row["Cantidad (qq)"]}"`);
+      return;
+    }
+    const cantidad = cantRes.valor;
+
+    ordenes.push({
+      nit_usuario: nit,
+      piloto: toStr(row["Piloto"]),
+      placa: res.placa, // normalizada C-###
+      tipo_unidad,
+      producto,
+      buque,
+      bl,
+      bodega,
+      cantidad_qq: cantidad,
+      nombre_transporte: toStr(row["Nombre Transporte"]),
+      no_orden_interna: toStr(row["No. Orden Interna"]),
+      observacion: toStr(row["Observación"]),
+      fecha_generada,
+      fecha_creada
+    });
   });
-});
 
-if (errores.length > 0) {
-  const mensaje = document.getElementById("mensaje");
-  mensaje.style.color = "orange";
-  mensaje.innerHTML = "⚠️ Corrige las placas antes de continuar:<br>" +
-    errores.map(e => "• " + e).join("<br>");
-  return;
-}
+  if (errores.length > 0) {
+    mensaje.style.color = "orange";
+    mensaje.innerHTML = "⚠️ Corrige las placas antes de continuar:<br>" +
+      errores.map(e => "• " + e).join("<br>");
+    return;
+  }
 
   // INSERTA y DEVUELVE los no_orden creados
   const { data: insertadas, error } = await supabase
     .from("ordenes")
     .insert(ordenes)
-    .select("no_orden"); // 👈 importante para recibir los IDs creados
+    .select("no_orden"); // para recibir los IDs creados
 
   if (error) {
     console.error(error);
@@ -570,20 +562,14 @@ if (errores.length > 0) {
   mensaje.style.color = "lightgreen";
   mensaje.innerText = `✅ Órdenes creadas exitosamente (${ids.length}).`;
 
-  // Pregunta si desea descargar el PDF de órdenes individuales
   const deseaPDF = confirm("¿Desea descargar el PDF con las órdenes individuales?");
-
   if (deseaPDF && ids.length) {
-    // Redirige a la página que arma el PDF (una hoja por orden)
     const qs = encodeURIComponent(ids.join(","));
     window.location.href = `imprimir_individuales.html?ids=${qs}`;
   } else {
-    // Si no quiere PDF, se regresa al menú
     window.location.href = "menu.html";
   }
-
 }
-
 
 // Seguridad de sesión
 if (!localStorage.getItem("nit")) {
