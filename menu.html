@@ -1,327 +1,607 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Menú Principal | MC Terminals</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
- <style>
-  body {
-    margin: 0;
-    background-image: url('https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//fondo_menu.jpeg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    font-family: 'Segoe UI', sans-serif;
-    color: white;
-  }
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  .navbar {
-    background-color: #1b1b3a;
-    position: sticky;
-    top: 0;
-    z-index: 1030;
-  }
-
-  .navbar-nav .nav-link {
-    color: white;
-    font-weight: 500;
-  }
-
-  .navbar-nav .nav-link:hover {
-    color: #87cefa;
-  }
-
-  .logo-img {
-    height: 80px;
-  }
-
-  .main-title {
-    text-align: center;
-    margin: 60px 20px 30px;
-    font-size: 2rem;
-    font-weight: bold;
-  }
-
-  section, .main-title, .feature {
-    background-color: rgba(0, 0, 0, 0.55);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  .feature {
-    padding: 30px 15px;
-    text-align: center;
-  }
-
-  .feature h5 {
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #ffffff;
-  }
-
-  .feature p,
-  section p,
-  section strong {
-    color: #e0e0e0;
-  }
-
-  h2 {
-    color: white;
-  }
-
-  .fst-italic.text-info {
-    color: #90cdf4 !important;
-  }
-
-  footer {
-    background-color: #1b1b3a;
-  }
-
-  footer small {
-    color: #ffffff99;
-  }
-
-  @media (max-width: 768px) {
-    .navbar-collapse {
-      text-align: center;
+  <style>
+    /* ===== Variables (consolidadas, sin cambiar valores finales) ===== */
+    :root{
+      --brand-900:#00416a;
+      --brand-800:#083a59;
+      --overlay: rgba(0,65,106,.80);
+      --white-80: rgba(255,255,255,.80);
+      --accent-soft:#bfc4ed;
+      --accent-success:#46dc6d;
+      --accent-ice:#7f9fcb;           /* usado en valores */
+      --process-pill: rgba(191,205,228,.75);
+      --radius-lg:16px;
+      --shadow-sm:0 6px 18px rgba(0,0,0,.15);
     }
 
-    .main-title {
-      margin-top: 20px;
-      font-size: 1.5rem;
+    /* ===== Base ===== */
+    body{
+      margin:0;
+      background-image:url('https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/Foto-de-fondo.jpg');
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
+      font-family:'Segoe UI',system-ui,-apple-system,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;
+      color:#fff;
     }
 
-    .logo-img {
-      height: 60px;
+    /* ===== Navbar (mismos tamaños/posiciones) ===== */
+   .navbar{
+  /* ... */
+  background-color: rgba(0,0,0,.35);      /* fallback si no hay blur */
+  -webkit-backdrop-filter: saturate(1.4) blur(6px); /* Safari/iOS */
+  backdrop-filter: saturate(140%) blur(6px);        /* Estándar */
+}
+
+    .navbar .logo-img{height:80px}
+    @media (max-width: 768px){ .navbar .logo-img{height:56px} }
+
+    .navbar-nav .nav-link{
+      color:#fff; font-weight:600; letter-spacing:.2px;
+      padding:.6rem .85rem; border-radius:10px;
+      transition:.2s ease; white-space:nowrap;
+    }
+    .navbar-nav .nav-link:hover,
+    .navbar-nav .nav-link:focus{
+      background-color:rgba(255,255,255,.10);
+      color:#fff; outline:none;
     }
 
-    .navbar-text {
-      font-size: 0.85rem;
-      text-align: center;
-      display: block;
-      width: 100%;
-      margin-top: 5px;
+    .menu-rows{display:flex;flex-direction:column;gap:.25rem;width:100%;}
+    .nav-divider{height:2px;background:var(--accent-soft);opacity:.6;border-radius:2px;margin:.1rem 0 .25rem;}
+
+    .nav-section-title{
+      color:var(--white-80);
+      font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+      margin: .25rem .5rem;
     }
-  }
-.valor-icon {
-  width: 100px;
-  height: 100px;
+    .user-pill{
+      background:rgba(255,255,255,.12);
+      border:1px solid var(--accent-soft);
+      color:#fff; padding:.35rem .6rem;
+      border-radius:999px; font-weight:600;
+    }
+
+    /* === Movimiento visual del logo (igual que antes) === */
+    .navbar .logo-img{
+      position: relative; left: 40px; display: block;
+    }
+    .navbar .navbar-brand{ width: 200px; display: flex; align-items: center; }
+    @media (max-width: 992px){ .navbar .logo-img{ left: 0; } .navbar .navbar-brand{ width: auto; } }
+
+    /* ===== Tarjeta "Sobre MC" (sin cambios de tamaños) ===== */
+    .about-card{ position: relative; background: var(--white-80); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 16px; }
+    .about-card-inner{ display: flex; gap: 18px; align-items: stretch; }
+    .about-card .media{ flex: 0 0 260px; max-width: 260px; border-radius: 12px; overflow: hidden; background: #e9eef6; }
+    .about-card .media img{ width: 100%; height: 100%; display: block; object-fit: cover; }
+    .about-card .body{ flex: 1 1 auto; padding: 6px 6px 6px 4px; }
+    .about-card h3{ margin: 0 0 8px 0; font-weight: 800; color: var(--brand-900); }
+    .about-card p{ margin: 0 0 10px 0; color: #425466; line-height: 1.55; }
+    .about-card .quote{ font-style: italic; font-weight: 600; color: var(--brand-900); }
+    .about-card .swatch-label{ position: absolute; top: 6px; right: 10px; font-size: 12px; color: var(--accent-soft); }
+    @media (max-width: 992px){ .about-card-inner{ flex-direction: column; } .about-card .media{ max-width: 100%; flex-basis: auto; height: 200px; } }
+
+    /* ===== Panel Nuestros Valores (consolida duplicados) ===== */
+    .values-panel{ background: var(--overlay); border-radius: var(--radius-lg); padding: 34px 28px; box-shadow: var(--shadow-sm); max-width: 1090px; margin: 0 auto; }
+    .values-panel h2{ color: #fff; font-weight: 800; letter-spacing: .3px; margin-bottom: 20px !important; }
+
+    .valor-box{ display:flex; align-items:center; gap:16px; justify-content:center; text-align:center; background: rgba(0,65,106,.88); min-height: 120px; padding: 18px 26px; border-radius: 14px; transition:transform .3s ease, box-shadow .3s ease, background-color .3s; }
+    .valor-box:hover{ transform:translateY(-5px); box-shadow: 0 10px 24px rgba(0,0,0,.24); background: rgba(0,65,106,.88); }
+    .valor-icon{ width:68px; height:68px; object-fit:contain; }
+    .valor-box strong{ color: var(--accent-ice); font-weight: 600; letter-spacing: .2px; }
+    .valor-feature{ max-width: 520px; margin: 0 auto 18px auto; }
+    @media (max-width: 992px){ .valor-icon{ width:64px; height:64px; } }
+
+    /* ===== Título Proceso (mismos tamaños que tenías) ===== */
+    .process-title{
+      background: var(--process-pill);
+      color: var(--brand-900);
+      font-weight: 800; letter-spacing: .3px;
+      padding: 14px 32px; border-radius: 14px; display: block;
+      width: clamp(680px, 70vw, 1700px);   /* igual que antes */
+      margin: 28px auto 22px; text-align: center; box-shadow: var(--shadow-sm);
+    }
+
+    /* ===== Proceso (consolidado, sin cambiar medidas) ===== */
+    .process-viewport{ width: 100%; padding: 0 12px; overflow-x: hidden; display: flex; justify-content: center; }
+    .process-flow{ display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 18px 22px; max-width: 1200px; margin: 0 auto; }
+
+    /* Usas .feature para las tarjetas del proceso (lo mantenemos tal cual la última versión) */
+    .feature{
+      background: #4d6c8d; color: #fff; border-radius: 14px;
+      min-width: 240px; max-width: 320px; padding: 18px 18px 16px; box-shadow: 0 8px 20px rgba(0,0,0,.20);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      justify-content: center; flex: 1 1 280px; /* adaptativo */
+    }
+    .feature:hover{ transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.26); }
+    .feature h5{ display: inline-flex; align-items: center; gap: 10px; margin: 0 0 8px 0; font-weight: 700; color: #fff; }
+    .feature h5 i{ font-size: 22px; color:#fff !important; }
+    .feature p{ margin:0; color:rgba(255,255,255,.9); font-size:.95rem; }
+
+    /* Conector (una sola definición, mismo resultado final) */
+    .connector{ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; width: 48px; margin: 0 8px; }
+    .connector i{ font-size: 26px; color: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); opacity: .95; }
+    .connector .date{ display: inline-block; font-size: .78rem; line-height: 1; color: #fff; background: rgba(255,255,255,.18); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+
+    .process-flow.single-line{ flex-wrap: nowrap; gap: 16px; }
+    .process-flow.single-line .connector{ display: flex; }
+    @media (max-width: 576px){ .process-flow{ gap: 14px; } .feature{ flex: 1 1 100%; min-width: 0; max-width: 100%; } .connector .date{ display: none; } }
+
+    /* ===== Footer ===== */
+    footer{ background-color: var(--brand-900); }
+    footer small{ color:#ffffff99; }
+      /* === Flechas tipo "punta" integradas a cada tarjeta (solo en una fila) === */
+    .process-flow.single-line .feature{ position:relative; margin-right:22px; }
+    .process-flow.single-line .feature::after{
+      content:""; position:absolute; top:50%; transform:translateY(-50%);
+      right:-16px; width:0; height:0;
+      border-left:16px solid #4d6c8d;                 /* mismo color de la tarjeta */
+      border-top:16px solid transparent;
+      border-bottom:16px solid transparent;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.18));  /* sutil sombra para relieve */
+      transition: transform .25s ease, opacity .25s ease;
+      opacity:.96;
+    }
+    /* no mostrar flecha en la última tarjeta */
+    .process-flow.single-line .feature:last-of-type::after{ display:none; }
+
+    /* animación sutil al pasar el mouse en desktop */
+    @media (hover:hover){
+      .process-flow.single-line .feature:hover::after{ transform:translateY(-50%) translateX(2px); }
+    }
+
+    /* en pantallas pequeñas (stack), ocultar la punta */
+    @media (max-width: 576px){
+      .process-flow .feature{ margin-right:0; }
+      .process-flow .feature::after{ display:none !important; }
+    }
+
+      /* Flecha como imagen en conectores */
+    .connector .arrow-img{ width:26px; height:auto; opacity:.96; filter:drop-shadow(0 2px 4px rgba(0,0,0,.18)); transition:transform .25s ease; }
+    /* pequeña interacción: al hover de la tarjeta, empuja la flecha un poco */
+    @media (hover:hover){ .process-flow.single-line .feature:hover + .connector .arrow-img{ transform: translateX(2px); } }
+    /* ocultar la punta CSS si existiera, priorizamos la imagen */
+    .process-flow.single-line .feature::after{ display:none !important; }
+      /* Ocultar el conector que sigue a un fin de fila y el último */
+    .feature.end-row + .connector{ display:none !important; }
+    .process-flow .feature:last-of-type + .connector{ display:none !important; }
+      /* ===== Conectores superpuestos (overlay) ===== */
+    /* Ocultamos los conectores inline y usamos una capa overlay calculada por JS */
+    .connector{ display:none !important; }
+
+    .process-flow{ position: relative; }
+    .connectors-overlay{ position:absolute; inset:0; pointer-events:none; }
+    .connectors-overlay .connector-dot{
+      position:absolute; width:26px; height:auto;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.18)); opacity:.96; transition:transform .25s ease;
+    }
+    /* En pantallas muy pequeñas no mostramos conectores */
+    @media (max-width: 576px){ .connectors-overlay{ display:none; } }
+
+    /* ===== MENSAJE GLOBAL ===== */
+#modalMensajeGlobal .modal-content {
+  background: #ffffff;
+  color: #0e0e2c;
+  border-radius: 16px;
+}
+
+#modalMensajeGlobal .modal-title {
+  font-weight: 700;
+  color: #0e0e2c;
+}
+
+#modalMensajeGlobal .mensaje-texto {
+  font-size: 1rem;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+#modalMensajeGlobal .mensaje-archivo img {
+  max-height: 60vh;
   object-fit: contain;
 }
 
-.feature {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+#modalMensajeGlobal iframe {
+  width: 100%;
+  height: 70vh;
+  border: none;
 }
 
-.feature:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.valor-box {
-  display: flex;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 10px 20px;
-  border-radius: 10px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s;
-}
-
-.valor-box:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.12);
-}
-</style>
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-
+  </style>
 </head>
 <body>
- <nav class="navbar navbar-expand-lg navbar-dark">
- <div class="container-fluid px-4">
-  <div class="d-flex w-100 justify-content-between align-items-center">
+
+ <!-- ===== NAVBAR ===== -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid px-3 px-md-4">
+
     <a class="navbar-brand d-flex align-items-center" href="#">
-      <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png"
-           alt="MC Terminals" class="logo-img">
+      <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/Logo-MC-Terminals.png" alt="MC Terminals" class="logo-img"/>
     </a>
-    <div class="text-center flex-grow-1">
-      <span class="navbar-text text-white" id="usuarioInfo"></span>
-    </div>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarNav" aria-controls="navbarNav"
-            aria-expanded="false" aria-label="Toggle navigation">
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir menú">
       <span class="navbar-toggler-icon"></span>
     </button>
-  </div>
 
-  <div class="collapse navbar-collapse justify-content-end mt-2" id="navbarNav">
-    <ul class="navbar-nav w-100 justify-content-end">
-      <li class="nav-item"><a class="nav-link" href="mensajes_admin.html">Mensajes Globales</a></li>
-      <li class="nav-item"><a class="nav-link" href="ver_historial.html">Historial edicion</a></li>
-      <li class="nav-item"><a class="nav-link" href="registro.html">Crear usuario</a></li>
-      <li class="nav-item"><a class="nav-link" href="ver_usuarios.html">Ver usuarios</a></li>
-      <li class="nav-item"><a class="nav-link" href="ver_buques.html" id="linkAgregarBuque">Gestionar buques</a></li>
-      <li class="nav-item"><a class="nav-link" href="ver_estatus.html">Ver estatus</a></li>
-      <li class="nav-item"><a class="nav-link" href="ver_ordenes.html">Ver órdenes</a></li>
-      <li class="nav-item"><a class="nav-link" href="cambiar_estatus.html">Cambiar estatus</a></li>
-      <li class="nav-item"><a class="nav-link" href="crear_orden.html">Crear orden</a></li>
-      <li class="nav-item"><a class="nav-link" href="login.html" onclick="cerrarSesion()">Cerrar sesión</a></li>
-    </ul>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <!-- Contenedor de filas del menú -->
+      <div class="menu-rows flex-grow-1">
+        <!-- Fila 1 (arriba) -->
+        <ul class="navbar-nav me-auto gap-1 gap-lg-2" id="adminGroup">
+          <li class="nav-section-title d-lg-none">Administración</li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="ver_historial.html">
+              <i class="fa-regular fa-clock me-1"></i> Historial edición
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="registro.html">
+              <i class="fa-solid fa-user-plus me-1"></i> Crear usuario
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="ver_usuarios.html">
+              <i class="fa-solid fa-users me-1"></i> Ver usuarios
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="ver_buques.html" id="linkAgregarBuque">
+              <i class="fa-solid fa-ship me-1"></i> Gestionar buques
+            </a>
+          </li>
+
+          <!-- MOVIDO AQUÍ desde Operación -->
+          <li class="nav-item">
+            <a class="nav-link" href="ver_estatus.html">
+              <i class="fa-regular fa-eye me-1"></i> Ver estatus
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="mensajes_admin.html">
+              <i class="fa-regular fa-message me-1"></i> Mensajes globales
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-divider d-none d-lg-block"></div>
+
+        <!-- Fila 2 (abajo) -->
+        <ul class="navbar-nav me-auto gap-1 gap-lg-2" id="opsGroup">
+          <li class="nav-section-title d-lg-none">Operación</li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="ver_ordenes.html">
+              <i class="fa-solid fa-list-check me-1"></i> Ver órdenes
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="cambiar_estatus.html">
+              <i class="fa-solid fa-right-left me-1"></i> Cambiar estatus
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="crear_orden.html">
+              <i class="fa-solid fa-plus me-1"></i> Crear orden
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Usuario / Salir -->
+      <div class="d-flex align-items-center ms-lg-3 user-actions">
+        <span id="usuarioInfo" class="user-pill"><i class="fa-regular fa-user me-1"></i> Usuario</span>
+        <a class="btn btn-outline-light btn-sm ms-2" href="login.html" onclick="cerrarSesion()">
+          <i class="fa-solid fa-right-from-bracket me-1"></i> Salir
+        </a>
+      </div>
+    </div>
+
   </div>
-</div>
 </nav>
 
-<section class="container my-5">
-  <h2 class="text-center mb-4 fw-bold">¿Qué es MC Terminals?</h2>
-  <p class="text-center px-3">
-    <strong>MC Terminals, S.A.</strong> es una empresa guatemalteca especializada en <strong>recepción, almacenamiento, control y despacho de productos a granel</strong>,
-    principalmente granos como maíz, soya y DDGS. Operamos desde instalaciones estratégicas en <strong>Puerto Quetzal</strong> y <strong>Puerto Barrios</strong>,
-    donde garantizamos procesos eficientes con infraestructura moderna y personal altamente capacitado.
-  </p>
-  <p class="text-center px-3">
-    Nos distinguimos por aplicar <strong>controles de calidad, monitoreo de humedad/temperatura y prevención de plagas</strong>, asegurando la integridad de cada carga.
-    Nuestros procesos de pesaje y despacho están diseñados para ofrecer seguridad, transparencia y confianza a nuestros clientes.
-  </p>
-  <p class="text-center fst-italic text-info">“Más que almacenar granos, almacenamos confianza.”</p>
-</section>
 
-<section class="container my-5">
-  <h2 class="text-center mb-4 fw-bold text-white">Nuestros Valores</h2>
+  <!-- ===== CONTENIDO ===== -->
+  <div class="container my-4">
+  <div class="about-card">
+    <span class="swatch-label"></span> 
+    <div class="about-card-inner">
+      <div class="media">
+        
+        <img id="aboutImage" src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/bodega.png" alt="Instalaciones de MC Terminals">
+      </div>
+      <div class="body">
+        <h3>¿Qué es MC Terminals?</h3>
+        <p>
+          <strong>MC Terminals, S.A.</strong> es una empresa guatemalteca especializada en
+          <strong>recepción, almacenamiento, control y despacho de productos a granel</strong>,
+          principalmente granos como maíz, soya y DDGS. Operamos desde instalaciones estratégicas
+          en <strong>Puerto Quetzal</strong> y <strong>Puerto Barrios</strong>, donde garantizamos
+          procesos eficientes con infraestructura moderna y personal altamente capacitado.
+        </p>
+        <p>
+          Nos distinguimos por aplicar <strong>controles de calidad, monitoreo de humedad/temperatura y
+          prevención de plagas</strong>, asegurando la integridad de cada carga. Nuestros procesos de
+          pesaje y despacho están diseñados para ofrecer seguridad, transparencia y confianza a nuestros clientes.
+        </p>
+        <p class="quote">“Más que almacenar granos, almacenamos confianza.”</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<section class="container my-5 values-panel">
+  <h2 class="text-center fw-bold">Nuestros Valores</h2>
+
+  <!-- Tarjeta destacada: Dios Primero -->
   <div class="row text-start px-3 px-md-5 text-white">
-    <div class="col-md-6 mb-3">
-      <div class="valor-box">
-        <img src="Dios_primero.png" alt="Dios Primero" class="valor-icon me-2">
+    <div class="col-12 mb-3">
+      <div class="valor-box valor-feature">
+        <img src="Dios_primero.png" alt="Dios Primero" class="valor-icon"/>
         <strong>Dios Primero</strong>
       </div>
     </div>
+
+    <!-- Resto de valores (2 columnas) -->
     <div class="col-md-6 mb-3">
       <div class="valor-box">
-        <img src="familia.png" alt="Familias Íntegras" class="valor-icon me-2">
+        <img src="familia.png" alt="Familias Íntegras" class="valor-icon"/>
         <strong>Familias Íntegras</strong>
       </div>
     </div>
     <div class="col-md-6 mb-3">
       <div class="valor-box">
-        <img src="etica.png" alt="Ética Profesional" class="valor-icon me-2">
+        <img src="etica.png" alt="Ética Profesional" class="valor-icon"/>
         <strong>Ética Profesional</strong>
       </div>
     </div>
     <div class="col-md-6 mb-3">
       <div class="valor-box">
-        <img src="comunicacion.png" alt="Comunicación Directa" class="valor-icon me-2">
+        <img src="comunicacion.png" alt="Comunicación Directa" class="valor-icon"/>
         <strong>Comunicación Directa</strong>
       </div>
     </div>
     <div class="col-md-6 mb-3">
       <div class="valor-box">
-        <img src="innovacion.png" alt="Innovación" class="valor-icon me-2">
+        <img src="innovacion.png" alt="Innovación" class="valor-icon"/>
         <strong>Innovación</strong>
       </div>
     </div>
   </div>
 </section>
 
-<h2 class="main-title">Proceso de Carga en MC Terminals</h2>
-<div class="container-fluid">
-  <div class="row row-cols-1 row-cols-md-5 g-3">
-    <div class="col">
-      <div class="feature">
-        <h5><i class="fas fa-file-alt me-2 text-info"></i> Generación de Orden</h5>
-        <p>Creación inicial con datos del piloto, unidad y producto.</p>
-      </div>
+
+  <h2 class="process-title">Proceso de Carga en MC Terminals</h2>
+
+  <!-- Viewport del proceso -->
+<div class="process-viewport">
+    <div id="processFlow" class="process-flow">
+    <div class="feature">
+      <h5><i class="fas fa-file-alt"></i> Generación de Orden</h5>
+      <p>Creación inicial con datos del piloto, unidad y producto.</p>
     </div>
-    <div class="col">
-      <div class="feature">
-        <h5><i class="fas fa-id-card me-2 text-primary"></i> Chequeo / Registro</h5>
-        <p>Verificación por cheque y cambio de estatus.</p>
-      </div>
+
+   <div class="connector">
+  <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/flecha1.png" alt="Flecha" class="arrow-img">
+  <span class="date">01/06</span>
+</div>
+   
+
+    <div class="feature">
+      <h5><i class="fas fa-id-card"></i> Chequeo / Registro</h5>
+      <p>Verificación por cheque y cambio de estatus.</p>
     </div>
-    <div class="col">
-      <div class="feature">
-        <h5><i class="fas fa-balance-scale-left me-2 text-warning"></i> Peso Inicial</h5>
-        <p>Peso tara de la unidad y asignacion de turno.</p>
-      </div>
+
+    <div class="connector">
+  <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/flecha1.png" alt="Flecha" class="arrow-img">
+  <span class="date">02/06</span>
+</div>
+
+    <div class="feature">
+      <h5><i class="fas fa-balance-scale-left"></i> Peso Inicial</h5>
+      <p>Peso tara de la unidad y asignación de turno.</p>
     </div>
-    <div class="col">
-      <div class="feature">
-        <h5><i class="fas fa-truck-loading me-2 text-success"></i> Carga de Unidad</h5>
-        <p>Proceso de llenado en bodega según orden registrada.</p>
-      </div>
+
+   <div class="connector">
+  <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/flecha1.png" alt="Flecha" class="arrow-img">
+  <span class="date">03/06</span>
+</div>
+
+    <div class="feature">
+      <h5><i class="fas fa-truck-loading"></i> Carga de Unidad</h5>
+      <p>Proceso de llenado en bodega según orden registrada.</p>
     </div>
-    <div class="col">
-      <div class="feature">
-        <h5><i class="fas fa-check-circle me-2 text-success"></i> Peso Final</h5>
-        <p>Verificación de peso cargado para emitir boleta final.</p>
-      </div>
+<div class="connector">
+  <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/flecha1.png" alt="Flecha" class="arrow-img">
+  <span class="date">04/06</span>
+</div>
+
+    <div class="feature">
+      <h5><i class="fas fa-check-circle"></i> Peso Final</h5>
+      <p>Verificación de peso cargado para emitir boleta final.</p>
     </div>
   </div>
 </div>
 
-<footer class="text-center py-4 mt-5 border-top border-secondary">
-  <small class="text-white-50">© MC Terminals, S.A. | Todos los derechos reservados 2025</small>
-  <br>
-  <small class="text-white-50">Desarrollado por Ubeda</small>
-</footer>
 
+  <footer class="text-center py-4 mt-5 border-top border-secondary">
+    <small class="text-white-50">© MC Terminals, S.A. | Todos los derechos reservados 2025</small><br/>
+    <small class="text-white-50">Desarrollado por Ubeda</small>
+  </footer>
+
+  <!-- Scripts -->
+ <!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- ✅ Supabase antes que tus scripts -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = "https://fpqnzqrdyxmhptosplos.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c";
-  window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
 
+  <!-- Supabase antes que tus scripts -->
+ <!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Cliente Supabase (ÚNICO lugar donde se crea) -->
+<script src="supabaseClient.js"></script>
+<script src="mensajes_globales.js"></script>
+
+ <!-- ===== Sesión / permisos / menú ===== -->
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  //  Validar sesión
   const rol = localStorage.getItem("rol");
   const nombre = localStorage.getItem("nombre") || "Usuario";
+  const nit = localStorage.getItem("nit");
 
-  if (!rol) {
-    window.location.href = "login.html";
+  if (!rol || !nit) {
+    window.location.replace("login.html");
+    return;
   }
 
-  document.getElementById("usuarioInfo").textContent = `${nombre} (${rol})`;
+// Mostrar usuario
+  const usuSpan = document.getElementById("usuarioInfo");
+  if (usuSpan) usuSpan.textContent = `${nombre} (${rol})`;
 
+  // Permisos por rol
   const permisosPorRol = {
-    ube_admin: ["registro.html", "ver_usuarios.html", "ver_estatus.html", "ver_ordenes.html", "cambiar_estatus.html", "crear_orden.html", "ver_buques.html", "ver_historial.html"],
-    admin: ["registro.html", "ver_usuarios.html", "ver_estatus.html", "ver_ordenes.html", "cambiar_estatus.html", "crear_orden.html", "ver_buques.html", "ver_historial.html"],
-    bascula: ["ver_ordenes.html", "cambiar_estatus.html"],
-    cheque: ["cambiar_estatus.html"],
-    consignatario: ["ver_ordenes.html","ver_estatus.html","crear_orden.html"],
-    operador_externo: ["cambiar_estatus.html"]
+    ube_admin: ["registro.html","ver_usuarios.html","ver_estatus.html","ver_ordenes.html","cambiar_estatus.html","crear_orden.html","ver_buques.html","ver_historial.html","mensajes_admin.html"],
+    admin:     ["registro.html","ver_usuarios.html","ver_estatus.html","ver_ordenes.html","cambiar_estatus.html","crear_orden.html","ver_buques.html","ver_historial.html","mensajes_admin.html"],
+    bascula:   ["ver_ordenes.html","cambiar_estatus.html"],
+    cheque:    ["cambiar_estatus.html"],
+    consignatario:["ver_ordenes.html","ver_estatus.html","crear_orden.html"],
+    operador_externo:["cambiar_estatus.html"]
   };
 
+    // Filtrar enlaces del menú
   document.querySelectorAll(".nav-link").forEach(link => {
     const href = link.getAttribute("href");
-    if (href !== "login.html" && (!permisosPorRol[rol] || !permisosPorRol[rol].includes(href))) {
-      link.style.display = "none";
+    if (href !== "login.html" && !permisosPorRol[rol]?.includes(href)) {
+      link.closest("li").style.display = "none";
     }
   });
 
-  function cerrarSesion() {
+  // Ocultar grupos vacíos
+  ["opsGroup","adminGroup"].forEach(id => {
+    const group = document.getElementById(id);
+    if (!group) return;
+    const visibles = group.querySelectorAll('li.nav-item:not([style*="display: none"])').length;
+    if (!visibles) group.style.display = "none";
+  });
+
+ 
+  // Cerrar sesión
+  window.cerrarSesion = () => {
     localStorage.clear();
     window.location.href = "login.html";
-  }
-</script>
-
-<script>
-  if (!localStorage.getItem("nit")) {
-    window.location.replace("login.html");
-  }
-  history.pushState(null, null, location.href);
-  window.onpopstate = function () {
-    history.pushState(null, null, location.href);
   };
+     // Bloquear botón atrás
+  history.pushState(null, null, location.href);
+  window.onpopstate = () => history.pushState(null, null, location.href);
+
+});
 </script>
 
-<!-- ✅ Scripts propios que ya pueden usar supabase -->
-<script src="guard_bloqueo.js"></script>
-<script src="mensajes_globales.js"></script>
+  <script>
+    if (!localStorage.getItem("nit")) {
+      window.location.replace("login.html");
+    }
+    history.pushState(null,null,location.href);
+    window.onpopstate = function(){ history.pushState(null,null,location.href); };
+  </script>
+
+  <!-- Scripts propios -->
+  <script src="guard_bloqueo.js"></script>
+  
+ <script>
+(function(){
+  const flow = document.getElementById('processFlow');
+  if (!flow) return;
+
+  const cardsSelector = '.feature';
+  const ARROW_URL = 'https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/flecha1.png';
+
+  function ensureOverlay(){
+    let overlay = flow.querySelector('.connectors-overlay');
+    if (!overlay){
+      overlay = document.createElement('div');
+      overlay.className = 'connectors-overlay';
+      flow.appendChild(overlay);
+    }
+    overlay.innerHTML = '';
+    return overlay;
+  }
+
+  function computeEndRows(){
+    const cards = Array.from(flow.querySelectorAll(cardsSelector));
+    cards.forEach(c => c.classList.remove('end-row'));
+    for (let i = 0; i < cards.length - 1; i++){
+      const a = cards[i];
+      const b = cards[i+1];
+      if (a.offsetTop !== b.offsetTop){ a.classList.add('end-row'); }
+    }
+    if (cards.length){ cards[cards.length - 1].classList.add('end-row'); }
+  }
+
+  function placeConnectors(){
+    const overlay = ensureOverlay();
+    const cards = Array.from(flow.querySelectorAll(cardsSelector));
+    if (window.matchMedia('(max-width: 576px)').matches || cards.length < 2) return;
+
+    const flowRect = flow.getBoundingClientRect();
+    for (let i = 0; i < cards.length - 1; i++){
+      const a = cards[i], b = cards[i+1];
+      if (a.offsetTop !== b.offsetTop) continue; // solo conectores dentro de la misma fila
+      const ar = a.getBoundingClientRect();
+      const br = b.getBoundingClientRect();
+      const x = (ar.right + br.left) / 2 - flowRect.left;       // centro entre tarjetas
+      const y = (ar.top + ar.height / 2) - flowRect.top;        // centro vertical de la tarjeta
+
+      const img = document.createElement('img');
+      img.src = ARROW_URL; img.alt = 'Flecha'; img.className = 'connector-dot';
+      img.style.left = x + 'px'; img.style.top = y + 'px';
+      overlay.appendChild(img);
+    }
+  }
+
+  let rafId = null;
+  function updateLayout(){
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(function(){
+      computeEndRows();
+      placeConnectors();
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', updateLayout);
+  window.addEventListener('load', updateLayout);
+  window.addEventListener('resize', updateLayout);
+
+  const ro = new ResizeObserver(updateLayout);
+  ro.observe(flow);
+  Array.from(flow.children).forEach(ch => ro.observe(ch));
+})();
+</script>
+
+
 
 </body>
 </html>

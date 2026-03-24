@@ -1,9 +1,17 @@
 // guard_bloqueo.js
-(function () {
-  const nit = localStorage.getItem("nit");
-  if (!nit) return; // no hay sesión, no hacemos nada
+document.addEventListener("DOMContentLoaded", () => {
 
-  // 1) Chequeo inmediato (por si ya está bloqueado antes de suscribirse)
+  const supabase = window.__supabaseClient;
+  const nit = localStorage.getItem("nit");
+
+  // Validaciones básicas
+  if (!supabase) {
+    console.error("Supabase no inicializado en guard_bloqueo.js");
+    return;
+  }
+  if (!nit) return; // no hay sesión
+
+  //  Chequeo inmediato (por si ya estaba bloqueado)
   supabase
     .from("usuarios")
     .select("bloqueado")
@@ -13,34 +21,39 @@
       if (!error && data?.bloqueado) {
         localStorage.clear();
         alert("Tu usuario está bloqueado. Se cerrará la sesión.");
-        location.href = "login.html";
+        window.location.href = "login.html";
       }
-    });
+    })
+    .catch(err => console.error("Error chequeo bloqueo:", err));
 
-  // 2) Suscripción Realtime a cambios de 'bloqueado' de ESTE usuario
-  const ch = supabase
+  //  Suscripción Realtime al bloqueo del usuario
+  const channel = supabase
     .channel("rt_bloqueo_" + nit)
     .on(
       "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "usuarios", filter: `nit=eq.${nit}` },
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "usuarios",
+        filter: `nit=eq.${nit}`
+      },
       (payload) => {
         if (payload?.new?.bloqueado) {
           localStorage.clear();
           alert("Tu usuario fue bloqueado. Se cerrará la sesión.");
-          location.href = "login.html";
+          window.location.href = "login.html";
         }
       }
     )
     .subscribe();
 
-  // 3) Limpieza opcional del canal al salir o recargar
+  // Limpieza del canal al salir
   window.addEventListener("beforeunload", () => {
-    try { supabase.removeChannel(ch); } catch (_) {}
+    try {
+      supabase.removeChannel(channel);
+    } catch (e) {
+      console.warn("No se pudo cerrar el canal:", e);
+    }
   });
 
-  // 4) (Opcional) Fallback: re-check cada 2 min por si se pierde Realtime
-  // setInterval(async () => {
-  //   const { data } = await supabase.from("usuarios").select("bloqueado").eq("nit", nit).maybeSingle();
-  //   if (data?.bloqueado) { localStorage.clear(); location.href = "login.html"; }
-  // }, 120000);
-})();
+});

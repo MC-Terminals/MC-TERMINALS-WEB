@@ -1,60 +1,95 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Crea el contenedor visual para mostrar el mensaje
-  const emergente = document.createElement("div");
-  emergente.id = "mensajeEmergente";
-  emergente.style.cssText = `
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #ff4c4c;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 10000;
-    font-size: 1.2rem;
-    text-align: center;
+document.addEventListener("DOMContentLoaded", async () => {
+  const supabase = window.__supabaseClient;
+  if (!supabase) return;
+
+  // Obtener el mensaje activo más reciente
+  const { data, error } = await supabase
+    .from("mensajes_globales")
+    .select("*")
+    .eq("activo", true)
+    .order("inicio", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return;
+
+  //  Si NO es fijo y ya venció → no mostrar
+  if (!data.fijo && data.fin && new Date(data.fin) < new Date()) return;
+
+  //  Clave ÚNICA por mensaje (permite mostrar nuevos mensajes)
+  const vistoKey = `mensaje_global_visto_${data.id}`;
+  if (sessionStorage.getItem(vistoKey)) return;
+
+  /* =========================
+      CONTENIDO DEL MENSAJE
+     ========================= */
+
+  //  Texto (con fallback si viene vacío)
+  const textoHtml = (data.texto && data.texto.trim())
+    ? data.texto.replace(/\n/g, "<br>")
+    : "<em class='text-muted'>No se proporcionó descripción.</em>";
+
+  let contenido = `
+    <div class="mensaje-texto mb-4">
+      ${textoHtml}
+    </div>
   `;
-  emergente.innerHTML = `
-    <span id="textoMensaje">Mensaje del sistema...</span><br>
-    <small>Se cerrará en <span id="contador">20</span> segundos</small>
-  `;
-  document.body.appendChild(emergente);
 
-  // Crea el audio para notificación
-  const audio = document.createElement("audio");
-  audio.id = "audioNotificacion";
-  audio.src = "notificacion.mp3";  // Asegúrate de que esté en la raíz o corrige la ruta
-  audio.preload = "auto";
-  document.body.appendChild(audio);
-
-  // Canal de mensajes globales
-  const canal = new BroadcastChannel("mensajes_sistema");
-  canal.onmessage = (e) => mostrarMensajeEmergente(e.data.texto, e.data.duracion || 20);
-
-  function mostrarMensajeEmergente(texto, duracion = 20) {
-    const contenedor = document.getElementById("mensajeEmergente");
-    const textoElem = document.getElementById("textoMensaje");
-    const contador = document.getElementById("contador");
-
-    textoElem.innerText = texto;
-    contenedor.style.display = "block";
-    contador.innerText = duracion;
-
-    // Intenta reproducir el sonido
-    audio.play().catch((err) => {
-      console.warn("No se pudo reproducir el audio:", err);
-    });
-
-    let segundos = duracion;
-    const intervalo = setInterval(() => {
-      segundos--;
-      contador.innerText = segundos;
-      if (segundos <= 0) {
-        clearInterval(intervalo);
-        contenedor.style.display = "none";
-      }
-    }, 1000);
+  //  Archivo (imagen o PDF) SI existe
+  if (data.archivo_url) {
+    if (data.archivo_tipo === "pdf") {
+      contenido += `
+        <div class="mensaje-archivo">
+          <iframe
+            src="${data.archivo_url}"
+            loading="lazy">
+          </iframe>
+        </div>
+      `;
+    } else {
+      contenido += `
+        <div class="mensaje-archivo text-center">
+          <img
+            src="${data.archivo_url}"
+            class="img-fluid rounded"
+            alt="Archivo del mensaje">
+        </div>
+      `;
+    }
   }
+
+  /* =========================
+      MODAL
+     ========================= */
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <div class="modal fade" id="modalMensajeGlobal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+               ${data.titulo || "COMUNICADO"}
+            </h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            ${contenido}
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  //  Mostrar modal
+  new bootstrap.Modal(
+    document.getElementById("modalMensajeGlobal"),
+    {
+      backdrop: "static",
+      keyboard: false
+    }
+  ).show();
+
+  //  Marcar SOLO este mensaje como visto
+  sessionStorage.setItem(vistoKey, "1");
 });

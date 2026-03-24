@@ -1,14 +1,17 @@
-const supabase = window.supabase.createClient(
-  "https://fpqnzqrdyxmhptosplos.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c" // tu clave real
-);
+const supabaseClient = window.__supabaseClient;
+
+if (!supabaseClient) {
+  console.error("❌ Supabase no inicializado");
+  alert("Error de conexión. Recarga la página.");
+  throw new Error("Supabase no inicializado");
+}
+
 
 let empresas = [];
 let productos = [];
 let bls = [];
 let idBuque = new URLSearchParams(window.location.search).get("id");
 
-// ... (todas las funciones anteriores intactas)
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!idBuque) {
@@ -85,17 +88,17 @@ window.agregarBL = function () {
 
 
 async function cargarEmpresas() {
-  const { data, error } = await supabase.from("usuarios").select("nit, empresa");
+  const { data, error } = await supabaseClient.from("usuarios").select("nit, empresa");
   if (!error) empresas = data;
 }
 
 async function cargarProductos() {
-  const { data, error } = await supabase.from("productos_buque").select("producto");
+  const { data, error } = await supabaseClient.from("productos_buque").select("producto");
   if (!error) productos = [...new Set(data.map(p => p.producto))];
 }
 
 async function cargarDatosBuque() {
-  const { data: buque, error: buqueError } = await supabase.from("buques").select("*").eq("id", idBuque).single();
+  const { data: buque, error: buqueError } = await supabaseClient.from("buques").select("*").eq("id", idBuque).single();
   if (buqueError || !buque) {
     alert("❌ Error al obtener buque.");
     return;
@@ -103,15 +106,13 @@ async function cargarDatosBuque() {
 
   document.getElementById("nombreBuque").value = buque.nombre;
 
-  const { data: productosData } = await supabase
-    .from("productos_buque")
+  const { data: productosData } = await supabaseClient.from("productos_buque")
     .select("id, producto")
     .eq("id_buque", idBuque);
 
   const productoIds = productosData.map(p => p.id);
 
-  const { data: blsData } = await supabase
-    .from("bls_producto")
+  const { data: blsData } = await supabaseClient.from("bls_producto")
     .select("*")
     .in("id_producto_buque", productoIds);
 
@@ -234,8 +235,7 @@ async function actualizarBuque() {
   if (!nuevoNombre) return alert("⚠️ Ingresa un nombre para el buque.");
   if (bls.length === 0) return alert("⚠️ Debes agregar al menos una poliza.");
 
-  const { data: existe } = await supabase
-    .from("buques")
+  const { data: existe } = await supabaseClient.from("buques")
     .select("id")
     .eq("nombre", nuevoNombre)
     .neq("id", idBuque)
@@ -246,17 +246,17 @@ async function actualizarBuque() {
     return;
   }
 
-  await supabase.from("buques").update({ nombre: nuevoNombre }).eq("id", idBuque);
+  await supabaseClient.from("buques").update({ nombre: nuevoNombre }).eq("id", idBuque);
 
-  const { data: productosOld } = await supabase
+  const { data: productosOld } = await supabaseClient
     .from("productos_buque")
     .select("id")
     .eq("id_buque", idBuque);
 
   const idsOld = productosOld.map(p => p.id);
   if (idsOld.length) {
-    await supabase.from("bls_producto").delete().in("id_producto_buque", idsOld);
-    await supabase.from("productos_buque").delete().eq("id_buque", idBuque);
+    await supabaseClient.from("bls_producto").delete().in("id_producto_buque", idsOld);
+    await supabaseClient.from("productos_buque").delete().eq("id_buque", idBuque);
   }
 
   const productosCreados = {};
@@ -265,8 +265,7 @@ async function actualizarBuque() {
     if (productosCreados[bl.producto]) {
       idProducto = productosCreados[bl.producto];
     } else {
-      const { data: prod } = await supabase
-        .from("productos_buque")
+      const { data: prod } = await supabaseClient.from("productos_buque")
         .insert([{ id_buque: idBuque, producto: bl.producto }])
         .select()
         .single();
@@ -274,7 +273,7 @@ async function actualizarBuque() {
       productosCreados[bl.producto] = idProducto;
     }
 
-    await supabase.from("bls_producto").insert([{
+    await supabaseClient.from("bls_producto").insert([{
       id_producto_buque: idProducto,
       nit_empresa: bl.nit_empresa,
       bl: bl.bl,

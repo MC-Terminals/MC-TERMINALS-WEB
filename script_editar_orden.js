@@ -1,7 +1,11 @@
-const supabase = window.supabase.createClient(
-  "https://fpqnzqrdyxmhptosplos.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c"
-);
+const supabaseClient = window.__supabaseClient;
+
+if (!supabaseClient) {
+  console.error("❌ Supabase no inicializado");
+  alert("Error de conexión. Recarga la página.");
+  throw new Error("Supabase no inicializado");
+}
+
 
 const params = new URLSearchParams(window.location.search);
 const ordenId = params.get("orden");
@@ -38,8 +42,7 @@ function isoAhoraGuatemala() {
 }
 
 async function cargarBuques() {
-  const { data, error } = await supabase
-    .from("buques")
+  const { data, error } = await supabaseClient.from("buques")
     .select("id, nombre, productos_buque (producto, bls_producto (bl))");
 
   if (error) {
@@ -162,8 +165,7 @@ async function cargarDatosOrden() {
     return;
   }
 
-  const { data, error } = await supabase
-    .from("ordenes")
+  const { data, error } = await supabaseClient.from("ordenes")
     .select("*")
     .eq("no_orden", ordenId)
     .single();
@@ -179,7 +181,6 @@ async function cargarDatosOrden() {
   bodegaSelect.value = data.bodega;
   tipoUnidadSelect.value = data.tipo_unidad;
   cantidadInput.value = data.cantidad_qq;
-  // dejamos esta línea como la tienes para no romper nada más
   fechaInput.value = data.fecha_generada ? data.fecha_generada.split("T")[0] : "";
   observacionInput.value = data.observacion || "";
   nombreTransporteInput.value = data.nombre_transporte || "";
@@ -263,7 +264,7 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // 🔧 CAMBIO CLAVE: fecha_generada = AHORA en Guatemala (reinicia 24h)
+  
   const nuevosDatos = {
     placa: `C-${placaRaw}`,
     piloto: pilotoInput.value.trim(),
@@ -274,13 +275,12 @@ form.addEventListener("submit", async (e) => {
     buque: buqueSelect.value,
     bl: blSelect.value,
     observacion: observacionInput.value.trim(),
-    fecha_generada: isoAhoraGuatemala(),   // ⬅️ antes: fechaSeleccionada + " 00:00:00"
+    fecha_generada: isoAhoraGuatemala(),  
     nombre_transporte: nombreTransporteInput.value.trim(),
     no_orden_interna: noOrdenInternaInput.value.trim(),
   };
 
-  const { data: datosPrevios, error: errorPrevios } = await supabase
-    .from("ordenes")
+  const { data: datosPrevios, error: errorPrevios } = await supabaseClient.from("ordenes")
     .select("*")
     .eq("no_orden", ordenId)
     .single();
@@ -315,16 +315,14 @@ form.addEventListener("submit", async (e) => {
   }
 
   if (cambios.length > 0) {
-    const { error: errorHistorial } = await supabase
-      .from("historial_ordenes")
+    const { error: errorHistorial } = await supabaseClient.from("historial_ordenes")
       .insert(cambios);
     if (errorHistorial) {
       console.error("Error al guardar historial de modificaciones:", errorHistorial);
     }
   }
 
-  const { error: errorActualizacion } = await supabase
-    .from("ordenes")
+  const { error: errorActualizacion } = await supabaseClient.from("ordenes")
     .update(nuevosDatos)
     .eq("no_orden", ordenId);
 
@@ -341,4 +339,4 @@ form.addEventListener("submit", async (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", cargarDatosOrden);
-document.addEventListener("DOMContentLoaded", cargarDatosOrden);
+

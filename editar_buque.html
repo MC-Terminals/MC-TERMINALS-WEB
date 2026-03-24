@@ -65,7 +65,7 @@
 </head>
 <body>
 
-  <!-- ✅ Logo arriba separado -->
+
   <div class="logo-header">
     <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/logo_1.png" alt="MC Terminals">
   </div>
@@ -79,10 +79,10 @@
         <input type="text" id="nombreBuque" class="form-control" placeholder="Ej. RABEA" />
       </div>
 
-      <!-- Botón para agregar un nuevo BL -->
+     
       <button id="btnAgregarBL" class="btn btn-secondary mb-3">➕ Agregar poliza</button>
 
-      <!-- Formulario de nuevo BL oculto -->
+      
       <div id="formAgregarBL" class="d-none">
         <h5>Nueva poliza</h5>
         <div class="mb-2">
@@ -113,22 +113,32 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="script_editar_buque.js"></script>
+ <!-- 1️⃣ Librería Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- 2️⃣ Cliente global (OBLIGATORIO) -->
+<script src="supabaseClient.js"></script>
+
+<!-- 3️⃣ Bloqueo de sesión -->
+<script src="guard_bloqueo.js"></script>
+
+<!-- 4️⃣ Script de la página -->
+<script src="script_editar_buque.js"></script>
+
 <script>
-    // Seguridad: sesión obligatoria
+    
     if (!localStorage.getItem("nit")) {
       window.location.replace("login.html");
     }
 
-    // Bloqueo de retroceso
+    
     history.pushState(null, null, location.href);
     window.onpopstate = function () {
       history.pushState(null, null, location.href);
     };
   </script>
-  <script src="guard_bloqueo.js"></script>
-  <script src="mensajes_globales.js"></script>
+
+ 
 
 </body>
 </html>

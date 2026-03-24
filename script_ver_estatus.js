@@ -1,10 +1,11 @@
+const supabaseClient = window.__supabaseClient;
 
-// script_ver_estatus.js
+if (!supabaseClient) {
+  console.error("❌ Supabase no inicializado");
+  alert("Error de conexión. Recarga la página.");
+  throw new Error("Supabase no inicializado");
+}
 
-const supabase = window.supabase.createClient(
-  "https://fpqnzqrdyxmhptosplos.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c"
-);
 
 const tabla = document.getElementById("cuerpoTabla");
 const filtroPlaca = document.getElementById("filtroPlaca");
@@ -14,52 +15,38 @@ const filtroBodegaExterna = document.getElementById("filtroBodegaExterna");
 let empresasPorNit = {};
 let buquesPorId = {};
 
-// ⬇️ NUEVO: paginación server-side
+
 let paginaActual = 1;
 const pageSize = 15;        // ajusta a 50/100
 let totalFiltradas = 0;
 let ordenesPagina = [];     // solo la página actual
 
-// opcional: elementos UI (si no existen, los creas en el HTML)
+
 const btnAnterior = document.getElementById("btnAnterior");
 const btnSiguiente = document.getElementById("btnSiguiente");
 const lblContador = document.getElementById("contadorOrdenes");
 
-// helper para formatear (si lo usas)
+// helper para formatear 
 const fmtTon = new Intl.NumberFormat("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// (opcional) si necesitas buscar por id en la página actual:
+
 const ordenById = (id) => ordenesPagina.find(o => o.no_orden === id);
 
-
-async function eliminarOrdenesVencidas() {
-  const { error } = await supabase
-    .from("ordenes")
-    .delete()
-    .lt("fecha_generada", new Date(Date.now() - 24*60*60*1000).toISOString())
-    .eq("estatus", "generada");
-
-  if (error) {
-    console.error("Error al eliminar caducadas:", error);
-  }
-}
 
 
 
 
 async function cargarOrdenes() {
-  await eliminarOrdenesVencidas();
+  
 
   // buques (para mostrar nombre en la tabla)
-  const { data: buquesData, error: buquesError } = await supabase
-    .from("buques").select("id, nombre");
+  const { data: buquesData, error: buquesError } = await supabaseClient.from("buques").select("id, nombre");
   if (buquesError) { console.error("Error buques:", buquesError); return; }
   buquesPorId = {};
   buquesData.forEach(b => { buquesPorId[b.id] = b.nombre; });
 
   // empresas por NIT (para mostrar empresa)
-  const { data: usuariosData, error: usuariosError } = await supabase
-    .from("usuarios").select("nit, empresa");
+  const { data: usuariosData, error: usuariosError } = await supabaseClient.from("usuarios").select("nit, empresa");
   if (usuariosError) { console.error("Error empresas:", usuariosError); return; }
 
   empresasPorNit = {};
@@ -78,12 +65,11 @@ function buildQueryBase() {
   const estatusVal = filtroEstatus.value;             // "" | generada | registrada | ...
   const extVal     = filtroBodegaExterna.value;       // "" | "true" | "false"
 
-  let q = supabase
-    .from("ordenes")
+  let q = supabaseClient.from("ordenes")
     .select("*", { count: "exact" })
     .order("no_orden", { ascending: false }); // más nuevas primero
 
-  // Excluir finalizadas (lo hacías en cliente)
+  
   q = q.neq("estatus", "finalizada");
 
   // Rol: filtrar por NIT si corresponde
@@ -95,6 +81,9 @@ function buildQueryBase() {
   if (estatusVal) q = q.eq("estatus", estatusVal);
   if (placa)      q = q.ilike("placa", `%${placa}%`);
   if (extVal !== "") q = q.eq("bodega_externa", extVal === "true");
+//  Ver por defecto: activas + vencidas (oculta eliminadas)
+q = q.in("estado_logico", ["activa", "vencida"]);
+
 
   return q;
 }
@@ -183,8 +172,8 @@ async function eliminarOrden(no_orden) {
     return;
   }
 
-  // Llamamos al RPC directo con el número de orden (int)
-  const { data, error } = await supabase.rpc("eliminar_orden_seguro", {
+  
+  const { data, error } = await supabaseClient.rpc("eliminar_orden_seguro", {
     p_no_orden: Number(no_orden),
     p_nit: nitUsuario
   });
@@ -195,12 +184,12 @@ async function eliminarOrden(no_orden) {
     return;
   }
 
-  alert(data);   // e.g. "✅ Orden eliminada correctamente."
+  alert(data);   
   cargarOrdenes();
 }
 
 async function fetchAllFiltradas() {
-  const first = await buildQueryBase().range(0, 0); // solo para obtener 'count'
+  const first = await buildQueryBase().range(0, 0); 
   if (first.error) { console.error(first.error); return []; }
   const count = first.count || 0;
 

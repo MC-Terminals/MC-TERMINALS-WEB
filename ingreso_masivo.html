@@ -10,15 +10,15 @@
 
  <style>
   body {
-    background-color: #0e0e2c;
+    background-color: #082537;
     color: white;
     font-family: 'Segoe UI', sans-serif;
   }
 
   .card {
-    background-color: #1b1b3a;
+    background-color: #063552;
     border-radius: 15px;
-    box-shadow: 0 0 20px #3f3f91;
+    box-shadow: 0 0 20px #000000;
     margin-top: 50px;
     padding: 20px;
   }
@@ -48,8 +48,8 @@
 
   .logo-superior {
     position: absolute;
-    top: 15px;
-    right: 20px;
+    top: 20px;
+    right: 50px;
   }
 
   .logo-img {
@@ -63,56 +63,80 @@
   <div class="container">
     <div class="card p-4 position-relative">
       <div class="logo-superior">
-        <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" alt="Logo MC" class="logo-img">
+        <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/Logo-MC-Terminals.png" alt="Logo MC" class="logo-img">
       </div>
 
       <h3 class="text-center mb-4 text-white">Ingreso Masivo de Órdenes</h3>
 
       <div class="row mb-3">
-        <div class="col-md-4">
-          <label class="form-label">Fecha de carga</label>
-          <input type="date" class="form-control" id="fecha">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Bodega</label>
-          <select class="form-select" id="bodega">
-            <option value="">Seleccione...</option>
-            <option value="MC Terminals Puerto Barrios">Puerto Barrios</option>
-            <option value="MC Terminals Puerto Quetzal">Puerto Quetzal</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Tipo de Unidad</label>
-          <select class="form-select" id="tipo_unidad">
-            <option value="">Seleccione...</option>
-            <option value="varanda">Varanda</option>
-            <option value="granelera">Granelera</option>
+  <div class="col-md-4">
+    <label class="form-label" for="fecha">Fecha de carga</label>
+    <input type="date" class="form-control" id="fecha" name="fecha" aria-describedby="ayuda-fecha">
+    <small id="ayuda-fecha" class="form-text text-muted">Selecciona la fecha de las órdenes.</small>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="bodega">Bodega</label>
+    <select class="form-select" id="bodega" name="bodega" required aria-label="Seleccionar bodega">
+      <option value="" selected disabled>Seleccione...</option>
+      <option value="MC Terminals Puerto Barrios">MC Terminals Puerto Barrios</option>
+      <!-- más opciones -->
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="buque">Buque</label>
+    <select class="form-select" id="buque" name="buque" required aria-label="Seleccionar buque">
+      <option value="" selected disabled>Seleccione...</option>
+      <!-- opciones dinámicas -->
+    </select>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-4">
+    <label class="form-label" for="bl">BL</label>
+    <select class="form-select" id="bl" name="bl" required aria-label="Seleccionar BL">
+      <option value="" selected disabled>Seleccione...</option>
+      <!-- opciones dinámicas -->
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="producto">Producto</label>
+    <select class="form-select" id="producto" name="producto" required aria-label="Seleccionar producto">
+      <option value="" selected disabled>Seleccione...</option>
+      <!-- opciones dinámicas -->
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="tipo_unidad">Tipo de unidad</label>
+    <select class="form-select" id="tipo_unidad" name="tipo_unidad" required aria-label="Seleccionar tipo de unidad">
+      <option value="" selected disabled>Seleccione...</option>
+      <option value="granelera">Granelera</option>
             <option value="gondola">Góndola</option>
             <option value="volteo">Volteo</option>
+      <option value="camioneta">Baranda</option>
           </select>
         </div>
       </div>
+    <div class="mb-3">
+  <button class="btn btn-outline-light" onclick="descargarPlantilla()">📥 Descargar Plantilla Excel</button>
+</div>
 
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label">Buque</label>
-          <select class="form-select" id="buque"></select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Poliza (BL)</label>
-          <select class="form-select" id="bl"></select>
-        </div>
-      </div>
+<div class="mb-3">
+  <label class="form-label" for="excelInput">Archivo Excel a importar</label>
+  <input
+    type="file"
+    class="form-control mt-2"
+    id="excelInput"
+    name="excelInput"
+    accept=".xlsx,.xls"
+    aria-describedby="ayuda-excel">
+  <small id="ayuda-excel" class="form-text text-muted">Formatos permitidos: .xlsx, .xls</small>
+</div>
 
-      <div class="mb-3">
-        <label class="form-label">Producto</label>
-        <select class="form-select" id="producto"></select>
-      </div>
-
-      <div class="mb-3">
-        <button class="btn btn-outline-light" onclick="descargarPlantilla()">📥 Descargar Plantilla Excel</button>
-        <input type="file" class="form-control mt-2" id="excelInput" accept=".xlsx, .xls">
-      </div>
 
       <div class="table-responsive mb-3">
         <table class="table table-bordered table-striped text-white" id="tablaPreview">
@@ -143,441 +167,20 @@
     </div>
   </div>
 
-  <script>
-const supabase = window.supabase.createClient(
-  'https://fpqnzqrdyxmhptosplos.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c'
-);
+  
+<!-- 1️⃣ Librería Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-let datosExcel = [];
-const rol = localStorage.getItem("rol");
-const nit = localStorage.getItem("nit");
-let todosBLs = [];
+<!-- 2️⃣ Cliente global (UNO SOLO) -->
+<script src="supabaseClient.js"></script>
 
-// === NUEVO: referencia al input y reset al hacer click ===
-const excelInput = document.getElementById("excelInput");
-
-// Limpia el valor antes de abrir el diálogo, así 'change' se dispara aunque elijas el mismo archivo
-excelInput.addEventListener("click", () => {
-  excelInput.value = "";
-});
-
-document.addEventListener("DOMContentLoaded", async () => {
-  await cargarBuques();
-
-  document.getElementById("buque").addEventListener("change", mostrarBLsDelBuque);
-  document.getElementById("bl").addEventListener("change", mostrarProductoDelBL);
-});
-
-async function cargarBuques() {
-  try {
-    const selectBuque = document.getElementById("buque");
-    selectBuque.innerHTML = `<option value="">Seleccione un buque...</option>`;
-
-    let buques = [];
-
-    if (rol === "consignatario") {
-      // 1. Obtener IDs de productos asociados al consignatario
-      const { data: blsData, error: blsError } = await supabase
-        .from("bls_producto")
-        .select("id_producto_buque")
-        .eq("nit_empresa", nit);
-
-      if (blsError) throw blsError;
-      if (!blsData.length) return; // No hay buques para mostrar
-
-      const idsProducto = [...new Set(blsData.map(bl => bl.id_producto_buque))];
-
-      // 2. Obtener IDs de buques desde productos
-      const { data: productosData, error: productosError } = await supabase
-        .from("productos_buque")
-        .select("id_buque")
-        .in("id", idsProducto);
-
-      if (productosError) throw productosError;
-
-      const idsBuques = [...new Set(productosData.map(p => p.id_buque))];
-
-      // 3. Obtener datos de los buques
-      const { data: buquesData, error: buquesError } = await supabase
-        .from("buques")
-        .select("id, nombre")
-        .in("id", idsBuques);
-
-      if (buquesError) throw buquesError;
-
-      buques = buquesData || [];
-    } 
-    else {
-      // Roles con acceso a todos los buques
-      const { data, error } = await supabase
-        .from("buques")
-        .select("id, nombre");
-
-      if (error) throw error;
-      buques = data || [];
-    }
-
-    // 4. Llenar el select
-    buques.forEach(b => {
-      const opt = document.createElement("option");
-      opt.value = b.id;
-      opt.textContent = b.nombre;
-      selectBuque.appendChild(opt);
-    });
-
-  } catch (error) {
-    console.error("Error cargando buques:", error.message);
-  }
-}
-
-async function mostrarBLsDelBuque() {
-  const buqueId = document.getElementById("buque").value;
-
-  // Reset si no hay buque válido
-  if (!buqueId) {
-    document.getElementById("bl").innerHTML = `<option value="">Seleccione una poliza...</option>`;
-    document.getElementById("producto").innerHTML = `<option value="">Seleccione un producto...</option>`;
-    document.getElementById("producto").disabled = false;
-    todosBLs = [];
-    return;
-  }
-
-  // Productos del buque
-  const { data: productos, error: errorProd } = await supabase
-    .from("productos_buque")
-    .select("id, producto")
-    .eq("id_buque", buqueId);
-
-  if (errorProd || !productos || !productos.length) {
-    document.getElementById("bl").innerHTML = `<option value="">Seleccione una poliza...</option>`;
-    document.getElementById("producto").innerHTML = `<option value="">Seleccione un producto...</option>`;
-    document.getElementById("producto").disabled = false;
-    todosBLs = [];
-    return;
-  }
-
-  const idsProducto = productos.map(p => p.id);
-
-  // BLs del buque **filtrados por consignatario si aplica**
-  let query = supabase
-    .from("bls_producto")
-    .select("bl, id_producto_buque, nit_empresa")
-    .in("id_producto_buque", idsProducto);
-
-  if (rol === "consignatario") {
-    query = query.eq("nit_empresa", nit); // ← filtro clave
-  }
-
-  const { data: bls, error: errorBls } = await query;
-
-  // Armar relación BL ↔ producto
-  todosBLs = (bls || []).map(bl => ({
-    ...bl,
-    producto: productos.find(p => p.id === bl.id_producto_buque)?.producto || ""
-  }));
-
-  // Poblar selects
-  const blSelect = document.getElementById("bl");
-  const productoSelect = document.getElementById("producto");
-  blSelect.innerHTML = `<option value="">Seleccione una poliza...</option>`;
-  productoSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
-  productoSelect.disabled = false;
-
-  (todosBLs || []).forEach(b => {
-    const opt = document.createElement("option");
-    opt.value = b.bl;
-    opt.textContent = b.bl;
-    blSelect.appendChild(opt);
-  });
-}
-
-function mostrarProductoDelBL() {
-  const blSeleccionado = document.getElementById("bl").value;
-  const producto = todosBLs.find(b => b.bl === blSeleccionado)?.producto;
-
-  const prodSelect = document.getElementById("producto");
-  prodSelect.innerHTML = `<option value="">Seleccione un producto...</option>`;
-
-  if (producto) {
-    const opt = document.createElement("option");
-    opt.value = producto;
-    opt.textContent = producto;
-    prodSelect.appendChild(opt);
-    prodSelect.value = producto;
-  }
-
-  prodSelect.disabled = true;
-}
-
-// === REEMPLAZO: lectura del Excel y render ===
-excelInput.addEventListener("change", function (e) {
-  if (!e.target.files || !e.target.files[0]) return;
-
-  const reader = new FileReader();
-  reader.onload = function (ev) {
-    const data = new Uint8Array(ev.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-    // defval:"" → celdas vacías como cadena, evita undefined
-    datosExcel = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    // Limpia mensajes y vuelve a dibujar la vista previa (con validación de placa)
-    const mensaje = document.getElementById("mensaje");
-    mensaje.innerText = "";
-    renderTablaPreview();
-  };
-  reader.readAsArrayBuffer(e.target.files[0]);
-});
-
-function descargarPlantilla() {
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([
-    ["Piloto", "Placa", "Cantidad (qq)", "Nombre Transporte", "No. Orden Interna", "Observación"]
-  ]);
-  XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
-  XLSX.writeFile(wb, "plantilla_ingreso_masivo.xlsx");
-}
-
-function limpiarFormulario() {
-  // Limpiar campos generales
-  document.getElementById("fecha").value = "";
-  document.getElementById("bodega").selectedIndex = 0;
-  document.getElementById("tipo_unidad").selectedIndex = 0;
-  document.getElementById("buque").selectedIndex = 0;
-  document.getElementById("bl").innerHTML = `<option value="">Seleccione una poliza...</option>`;
-  document.getElementById("producto").innerHTML = `<option value="">Seleccione un producto...</option>`;
-  document.getElementById("producto").disabled = false;
-
-  // Limpiar archivo Excel
-  document.getElementById("excelInput").value = "";
-
-  // Limpiar vista previa
-  datosExcel = [];
-  document.querySelector("#tablaPreview tbody").innerHTML = "";
-
-  // Limpiar mensaje
-  document.getElementById("mensaje").innerText = "";
-}
-
-function validarYNormalizarPlaca(raw) {
-  if (raw === undefined || raw === null) {
-    return { ok: false, error: "Placa vacía." };
-  }
-
-  let s = String(raw).toUpperCase().trim();
-
-  // Quitar espacios internos
-  s = s.replace(/\s+/g, "");
-
-  // Quitar prefijo C o C- si lo trae
-  s = s.replace(/^C-?/, "");
-
-  // Dejar solo letras y números en el cuerpo
-  s = s.replace(/[^A-Z0-9]/g, "");
-
-  // Debe quedar exactamente 6: 3 dígitos + 3 letras
-  const cuerpo = s;
-  const esValida = /^\d{3}[A-Z]{3}$/.test(cuerpo);
-
-  if (!esValida) {
-    // Construir razón amigable
-    let razon = "";
-    if (cuerpo.length !== 6) {
-      razon = `Debe tener 6 caracteres (tiene ${cuerpo.length || 0}).`;
-    } else if (!/^\d{3}/.test(cuerpo)) {
-      razon = "Los primeros 3 deben ser números.";
-    } else if (!/[A-Z]{3}$/.test(cuerpo)) {
-      razon = "Los últimos 3 deben ser letras.";
-    } else {
-      razon = "Formato inválido.";
-    }
-    return { ok: false, error: razon, valorVisto: cuerpo };
-  }
-
-  return { ok: true, placa: `C-${cuerpo}` };
-}
-
-const toStr = (v) => (v == null ? "" : String(v).trim());
-
-function parseCantidadQQ(v) {
-  if (v == null || v === "") return { ok: false, error: "Cantidad vacía" };
-
-  // Si ya viene como número desde xlsx, úsalo directo
-  if (typeof v === "number") {
-    if (v < 1) return { ok: false, error: "debe ser ≥ 1" };
-    return { ok: true, valor: Number(v.toFixed(4)) };
-  }
-
-  let s = String(v).trim().replace(/\s/g, "");
-  const hasDot = s.includes(".");
-  const hasComma = s.includes(",");
-
-  if (hasDot && hasComma) {
-    // Decide según el último separador usado
-    const lastDot = s.lastIndexOf(".");
-    const lastComma = s.lastIndexOf(",");
-    if (lastComma > lastDot) {
-      // 1.234,56 -> 1234.56
-      s = s.replace(/\./g, "").replace(",", ".");
-    } else {
-      // 1,234.56 -> 1234.56
-      s = s.replace(/,/g, "");
-    }
-  } else if (hasComma && !hasDot) {
-    // Solo coma -> trátala como decimal (458,770 -> 458.770)
-    s = s.replace(",", ".");
-  }
-  // Solo punto o sin separadores: se queda igual
-
-  const n = parseFloat(s);
-  if (!isFinite(n)) return { ok: false, error: "Cantidad inválida" };
-  if (n < 1) return { ok: false, error: "debe ser ≥ 1" };
-
-  return { ok: true, valor: Number(n.toFixed(4)) }; // ajustado a 4 decimales
-}
-
-function renderTablaPreview() {
-  const tbody = document.querySelector("#tablaPreview tbody");
-  tbody.innerHTML = "";
-
-  datosExcel.forEach((row) => {
-    const placaRaw = toStr(row["Placa"]);
-    const res = validarYNormalizarPlaca(placaRaw);
-    const estado = res.ok ? `OK → ${res.placa}` : `Error → ${res.error}`;
-    const trStyle = res.ok ? "" : ' style="background:#4b1a1a"';
-
-    tbody.innerHTML += `
-      <tr${trStyle}>
-        <td>${toStr(row["Piloto"])}</td>
-        <td>${placaRaw}</td>
-        <td>${toStr(row["Cantidad (qq)"])}</td>
-        <td>${toStr(row["Nombre Transporte"])}</td>
-        <td>${toStr(row["No. Orden Interna"])}</td>
-        <td>${toStr(row["Observación"])}</td>
-        <td>${estado}</td>
-      </tr>
-    `;
-  });
-}
-
-async function crearMasivas() {
-  const mensaje = document.getElementById("mensaje");
-  mensaje.innerText = "";
-
-  const buque = document.getElementById("buque").value;
-  const bl = document.getElementById("bl").value;
-  const producto = document.getElementById("producto").value;
-  const bodega = document.getElementById("bodega").value;
-  const tipo_unidad = document.getElementById("tipo_unidad").value;
-  const fechaInput = document.getElementById("fecha").value;
-
-  if (!buque || !bl || !producto || !bodega || !tipo_unidad) {
-    mensaje.innerText = "⚠️ Complete todos los campos generales.";
-    mensaje.style.color = "orange";
-    return;
-  }
-
-  // ✅ Validación necesaria: no permitir fecha de carga pasada
-  let fecha_generada;
-  if (fechaInput) {
-    const hoy = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
-    if (fechaInput >= hoy) {
-      fecha_generada = new Date(fechaInput + "T00:00:00").toLocaleString("sv-SE");
-    } else {
-      mensaje.innerText = "⚠️ No se permiten fechas pasadas.";
-      mensaje.style.color = "orange";
-      return;
-    }
-  } else {
-    fecha_generada = new Date().toLocaleString("sv-SE"); // hoy
-  }
-
-  const fecha_creada = new Date().toLocaleString("sv-SE");
-
-  const errores = [];
-  const ordenes = [];
-
-  datosExcel.forEach((row, idx) => {
-    const fila = idx + 2; // 1 = encabezado
-
-    // Normalizar y validar placa
-    const placaRaw = toStr(row["Placa"]);
-    const res = validarYNormalizarPlaca(placaRaw);
-
-    if (!res.ok) {
-      errores.push(`Fila ${fila}: "${placaRaw}" → ${res.error}`);
-      return;
-    }
-
-    const cantRes = parseCantidadQQ(row["Cantidad (qq)"]);
-    if (!cantRes.ok) {
-      errores.push(`Fila ${fila}: Cantidad (qq) ${cantRes.error}. Valor: "${row["Cantidad (qq)"]}"`);
-      return;
-    }
-    const cantidad = cantRes.valor;
-
-    ordenes.push({
-      nit_usuario: nit,
-      piloto: toStr(row["Piloto"]),
-      placa: res.placa, // normalizada C-###
-      tipo_unidad,
-      producto,
-      buque,
-      bl,
-      bodega,
-      cantidad_qq: cantidad,
-      nombre_transporte: toStr(row["Nombre Transporte"]),
-      no_orden_interna: toStr(row["No. Orden Interna"]),
-      observacion: toStr(row["Observación"]),
-      fecha_generada,
-      fecha_creada
-    });
-  });
-
-  if (errores.length > 0) {
-    mensaje.style.color = "orange";
-    mensaje.innerHTML = "⚠️ Corrige las placas antes de continuar:<br>" +
-      errores.map(e => "• " + e).join("<br>");
-    return;
-  }
-
-  // INSERTA y DEVUELVE los no_orden creados
-  const { data: insertadas, error } = await supabase
-    .from("ordenes")
-    .insert(ordenes)
-    .select("no_orden"); // para recibir los IDs creados
-
-  if (error) {
-    console.error(error);
-    mensaje.innerText = "❌ Error al crear las órdenes.";
-    mensaje.style.color = "red";
-    return;
-  }
-
-  const ids = (insertadas || []).map(r => r.no_orden);
-
-  // Mensaje y pregunta
-  mensaje.style.color = "lightgreen";
-  mensaje.innerText = `✅ Órdenes creadas exitosamente (${ids.length}).`;
-
-  const deseaPDF = confirm("¿Desea descargar el PDF con las órdenes individuales?");
-  if (deseaPDF && ids.length) {
-    const qs = encodeURIComponent(ids.join(","));
-    window.location.href = `imprimir_individuales.html?ids=${qs}`;
-  } else {
-    window.location.href = "menu.html";
-  }
-}
-
-// Seguridad de sesión
-if (!localStorage.getItem("nit")) {
-  window.location.replace("login.html");
-}
-</script>
+<!-- 3️⃣ Bloqueo de usuario -->
 <script src="guard_bloqueo.js"></script>
-<script src="mensajes_globales.js"></script>
+
+<!-- 4️⃣ Script propio de ingreso masivo -->
+<script src="script_ingreso_masivo.js"></script>
+
+
 
 </body>
 </html>

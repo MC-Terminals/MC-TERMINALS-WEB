@@ -1,7 +1,11 @@
-const supabase = window.supabase.createClient(
-  "https://fpqnzqrdyxmhptosplos.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c"
-);
+const supabaseClient = window.__supabaseClient;
+
+if (!supabaseClient) {
+  console.error("❌ Supabase no inicializado");
+  alert("Error de conexión. Recarga la página.");
+  throw new Error("Supabase no inicializado");
+}
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   await cargarBuques();
@@ -20,8 +24,7 @@ if (!localStorage.getItem("nit")) {
 let buques = [];
 
 async function cargarBuques() {
-  const { data, error } = await supabase
-    .from("buques")
+  const { data, error } = await supabaseClient.from("buques")
     .select("*")
     .order("fecha_agregado", { ascending: false });
 
@@ -61,7 +64,7 @@ async function confirmarEliminacion(id, nombre) {
   const nit = localStorage.getItem("nit");
   if (!clave || !nit) { alert("Cancelado."); return; }
 
-  const { data: ok, error } = await supabase.rpc('eliminar_buque_seguro', {
+  const { data: ok, error } = await supabaseClient.rpc('eliminar_buque_seguro', {
     p_nit: nit,
     p_password: clave,
     p_buque_id: id

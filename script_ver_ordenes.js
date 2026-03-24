@@ -1,3 +1,10 @@
+const supabaseClient = window.__supabaseClient;
+
+if (!supabaseClient) {
+  console.error("❌ Supabase no inicializado");
+  alert("Error de conexión. Recarga la página.");
+  throw new Error("Supabase no inicializado");
+}
 // === NUEVO ESTADO Y UTILS ===
 const tabla = document.getElementById("tablaOrdenes");
 const filtroEstatus = document.getElementById("filtroEstatus");
@@ -12,6 +19,7 @@ const filtroEmpresa = document.getElementById("filtroEmpresa");
 
 let empresasPorNit = {};
 let buquesPorId = {};
+let rolesPorNit    = {};
 
 // paginación server-side
 let paginaActual = 1;
@@ -122,21 +130,47 @@ if (checkAllPage) {
 }
 
 
+  
+
+
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await cargarProductosUnicos();
+    });
+
+    async function cargarProductosUnicos() {
+      const { data, error } = await supabaseClient.from("productos_buque").select("producto");
+      if (error) { console.error("Error cargando productos:", error); return; }
+
+      const productosUnicos = [...new Set(data.map(p => p.producto))];
+      const filtroProducto = document.getElementById("filtroProducto");
+      productosUnicos.forEach(prod => {
+        const opt = document.createElement("option");
+        opt.value = prod; opt.textContent = prod;
+        filtroProducto.appendChild(opt);
+      });
+    }
+  
+
 
 async function cargarOrdenes() {
   // usuarios → mapa NIT → Empresa (para filtro Empresa)
   const { data: usuariosData, error: usuariosError } =
-    await supabase.from("usuarios").select("nit, empresa");
+    await supabaseClient.from("usuarios").select("nit, empresa, rol");
   if (usuariosError) {
     console.error("Error al cargar usuarios:", usuariosError);
     return;
   }
   empresasPorNit = {};
-  usuariosData.forEach(u => { empresasPorNit[u.nit] = u.empresa; });
+    rolesPorNit    = {};
+  usuariosData.forEach(u => {
+   empresasPorNit[u.nit] = u.empresa || "";
+   rolesPorNit[u.nit]    = (u.rol || "").toLowerCase();
+ });
 
   // buques → para mostrar nombre
   const { data: buquesData, error: buquesError } =
-    await supabase.from("buques").select("id, nombre");
+    await supabaseClient.from("buques").select("id, nombre");
   if (buquesError) {
     console.error("Error al cargar buques:", buquesError);
     return;
@@ -147,7 +181,11 @@ async function cargarOrdenes() {
   // llenar filtro Empresa (únicas)
   const select = document.getElementById("filtroEmpresa");
   select.innerHTML = '<option value="">Todas</option>';
-  const empresasUnicas = [...new Set(Object.values(empresasPorNit))].sort();
+  const empresasUnicas = [...new Set(
+  Object.entries(empresasPorNit)
+     .filter(([nit]) => rolesPorNit[nit] === "consignatario")
+      .map(([, emp]) => (emp || ""))
+  )].sort();
   empresasUnicas.forEach(empresa => {
     const opt = document.createElement("option");
     opt.value = (empresa || "").toLowerCase();
@@ -172,10 +210,9 @@ function buildQueryBase() {
   const placa      = filtroPlaca.value.trim();
   const piloto     = filtroPiloto.value.trim();
   const extVal     = filtroBodegaExterna.value;    // ""|"true"|"false"
-  const empSel     = filtroEmpresa.value;          // ""|empresa lower-case
+  const empSel     = (filtroEmpresa.value || "").trim().toLowerCase();          // ""|empresa lower-case
 
-  let q = supabase
-    .from("ordenes")
+  let q = supabaseClient.from("ordenes")
     .select("*", { count: "exact" })
     .order("no_orden", { ascending: false }); // más nuevas primero
 
@@ -199,8 +236,11 @@ function buildQueryBase() {
   // filtro Empresa ⇒ traducir empresa a lista de NITs
   if (empSel) {
     const nits = Object.entries(empresasPorNit)
-      .filter(([, emp]) => (emp || "").toLowerCase() === empSel)
-      .map(([nit]) => nit);
+      .filter(([nit, emp]) =>
+        (emp || "").toLowerCase() === empSel &&
+      rolesPorNit[nit] === "consignatario"
+     )
+     .map(([nit]) => nit);
     q = nits.length ? q.in("nit_usuario", nits) : q.in("nit_usuario", ["__no__match__"]);
   }
 
@@ -266,7 +306,7 @@ async function mostrarOrdenes() {
   document.getElementById("btnAnterior").disabled  = paginaActual <= 1;
   document.getElementById("btnSiguiente").disabled = paginaActual >= totalPaginas;
 
-  // listeners de checks (misma lógica tuya)
+  
   tabla.querySelectorAll(".chkOrden").forEach(chk => {
     chk.addEventListener("change", (e) => {
       const id = Number(e.target.dataset.id);
@@ -301,17 +341,12 @@ async function mostrarOrdenes() {
 
 
 
-// (puedes dejar aquí tus dos líneas de paginación si quieres)
-// document.getElementById("btnAnterior").disabled = paginaActual === 1;
-// document.getElementById("btnSiguiente").disabled = finPagina >= ordenesFiltradas.length;
-
 
 async function imprimirOrden(no_orden) {
   const orden = ordenById(no_orden);
   if (!orden) return alert("Orden no encontrada en la caché.");
 
-  const { data: usuario } = await supabase
-    .from("usuarios").select("empresa")
+  const { data: usuario } = await supabaseClient.from("usuarios").select("empresa")
     .eq("nit", orden.nit_usuario).single();
 
   const empresaNombre = usuario?.empresa || "Empresa Desconocida";
@@ -569,7 +604,7 @@ rows.forEach(o => {
 
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
- // ✅ Aplicar formato de fecha y hora a las columnas correctas
+ 
 const dateColumns = [1, 14, 15, 16, 17, 18, 20]; // índices reales de columnas fecha
 for (let i = 1; i < ws_data.length; i++) {
   dateColumns.forEach(col => {
@@ -582,7 +617,7 @@ for (let i = 1; i < ws_data.length; i++) {
   });
 }
 
-// ✅ Aplicar formato numérico a la columna de boleta (índice 19)
+
 for (let i = 1; i < ws_data.length; i++) {
   const ref = XLSX.utils.encode_cell({ r: i, c: 19 });
   const cell = ws[ref];
@@ -593,19 +628,19 @@ for (let i = 1; i < ws_data.length; i++) {
 }
 
 
-// Ajustar ancho automático con mejor precisión
+
 const colWidths = ws_data[0].map((_, colIdx) => {
   const maxLen = ws_data.reduce((max, row) => {
     const cell = row[colIdx];
     const value = cell instanceof Date ? cell.toLocaleString() : String(cell || "");
     return Math.max(max, value.length);
   }, 10);
-  return { wch: maxLen + 2 }; // Ajuste más fino
+  return { wch: maxLen + 2 }; 
 });
 ws["!cols"] = colWidths;
 
 
-  // Encabezado azul con letras blancas (solo visual en Excel si se usa con SheetJS Pro o herramientas externas)
+  
   const range = XLSX.utils.decode_range(ws['!ref']);
   for (let C = range.s.c; C <= range.e.c; ++C) {
     const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
@@ -651,9 +686,9 @@ function limpiarFiltros() {
   filtroBodegaExterna.value = "";
   filtroEmpresa.value = "";
 
-   clearGroup();                              // 👈 limpia selección global
+   clearGroup();                              //  limpia selección global
   const all = document.getElementById("checkAllPage");
-  if (all) all.checked = false;              // 👈 desmarca el maestro
+  if (all) all.checked = false;              //  desmarca el maestro
   
  const hoy = new Date().toLocaleDateString('fr-CA'); // Formato YYYY-MM-DD
   filtroInicio.value = hoy;
@@ -688,7 +723,87 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnMasivo = document.getElementById("btnImprimirMasivo");
   if (btnMasivo) btnMasivo.addEventListener("click", imprimirOrdenMasiva);
 
-  cargarOrdenes(); // ya no trae órdenes; prepara filtros y primera página
+  cargarOrdenes(); 
 });
 
+
+
+// —— Zoom del contenedor de órdenes ——
+
+(() => {
+  const VP   = document.getElementById('ordersViewport');
+  const TBL  = document.getElementById('miTabla');
+  const R    = document.getElementById('zoomRange');
+  const OUT  = document.getElementById('zoomOut');
+  const IN   = document.getElementById('zoomIn');
+  const RES  = document.getElementById('zoomReset');
+  const PCT  = document.getElementById('zoomPct');
+
+  const Z_MIN = 0.1, Z_MAX = 1.4, STEP = 0.05;
+  let z = Number(localStorage.getItem('ordersZoom') || 1);
+
+  function applyZoom() {
+    z = Math.max(Z_MIN, Math.min(Z_MAX, z));
+    TBL.style.setProperty('--tzoom', z);
+    if (R) R.value = z;
+    if (PCT) PCT.textContent = Math.round(z * 100) + '%';
+    localStorage.setItem('ordersZoom', z);
+  }
+
+  // Controles UI
+  if (OUT) OUT.addEventListener('click', () => { z -= STEP; applyZoom(); });
+  if (IN)  IN .addEventListener('click', () => { z += STEP; applyZoom(); });
+  if (RES) RES.addEventListener('click', () => { z  = 1;    applyZoom(); });
+  if (R)   R  .addEventListener('input', e => { z = +e.target.value; applyZoom(); });
+
+  
+  if (VP) VP.addEventListener('wheel', e => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      z += (e.deltaY < 0 ? STEP : -STEP);
+      applyZoom();
+    }
+  }, { passive: false });
+
+  // Pinch to zoom básico (móvil/trackpad con dos dedos)
+  let pts = new Map();
+  let baseZ = z, baseDist = 0;
+
+  function dist() {
+    const [a, b] = [...pts.values()];
+    if (!a || !b) return 0;
+    const dx = a.clientX - b.clientX;
+    const dy = a.clientY - b.clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  function onPointerDown(e) {
+    pts.set(e.pointerId, e);
+    if (pts.size === 2) {
+      baseDist = dist();
+      baseZ = z;
+    }
+  }
+  function onPointerMove(e) {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, e);
+    if (pts.size === 2 && baseDist > 0) {
+      const ratio = dist() / baseDist;
+      z = baseZ * ratio;
+      applyZoom();
+    }
+  }
+  function onPointerUp(e) { pts.delete(e.pointerId); }
+
+  ['pointerdown','pointermove','pointerup','pointercancel','pointerleave'].forEach(type => {
+    VP.addEventListener(type, (ev) => {
+      if (type === 'pointerdown') onPointerDown(ev);
+      else if (type === 'pointermove') onPointerMove(ev);
+      else onPointerUp(ev);
+    }, { passive: false });
+  });
+
+  // Inicializa acorde al localStorage
+  applyZoom();
+})();
 

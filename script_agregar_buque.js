@@ -1,7 +1,11 @@
-const supabase = window.supabase.createClient(
-  "https://fpqnzqrdyxmhptosplos.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW56cXJkeXhtaHB0b3NwbG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NjMyNDYsImV4cCI6MjA2MzMzOTI0Nn0.tcz7BdDovKPS-KoPk_LxRJW8ZfJpgjN8fKQ7h6NdR6c"
-);
+const supabaseClient = window.__supabaseClient;
+
+if (!supabaseClient) {
+  console.error("❌ Supabase no inicializado");
+  alert("Error de conexión. Recarga la página.");
+  throw new Error("Supabase no inicializado");
+}
+
 
 let buqueActual = null;
 let productosDisponibles = [];
@@ -32,7 +36,7 @@ if (!localStorage.getItem("nit")) {
 });
 
 async function cargarEmpresas() {
-  const { data, error } = await supabase.from("usuarios").select("nit, empresa");
+  const { data, error } = await supabaseClient.from("usuarios").select("nit, empresa");
   if (data) {
     empresasDisponibles = data;
     const select = document.getElementById("empresaSelect");
@@ -47,7 +51,7 @@ async function cargarEmpresas() {
 }
 
 async function cargarProductos() {
-  const { data, error } = await supabase.from("productos_buque").select("producto");
+  const { data, error } = await supabaseClient.from("productos_buque").select("producto");
   if (data) {
     productosDisponibles = [...new Set(data.map(p => p.producto))];
     const select = document.getElementById("productoSelect");
@@ -111,8 +115,7 @@ async function guardarBuque() {
   }
 
   // ✅ Verificar si el nombre ya existe
-  const { data: existente, error: errorExistencia } = await supabase
-    .from("buques")
+  const { data: existente, error: errorExistencia } = await supabaseClient.from("buques")
     .select("id")
     .eq("nombre", nombre)
     .maybeSingle();
@@ -131,8 +134,7 @@ async function guardarBuque() {
   }
 
   // ✅ Insertar el buque
-  const { data: buque, error } = await supabase
-    .from("buques")
+  const { data: buque, error } = await supabaseClient.from("buques")
     .insert([{ nombre }])
     .select()
     .single();
@@ -152,8 +154,7 @@ async function guardarBuque() {
     if (productosCreados[producto]) {
       idProducto = productosCreados[producto];
     } else {
-      const { data: productoData, error: errProd } = await supabase
-        .from("productos_buque")
+      const { data: productoData, error: errProd } = await supabaseClient.from("productos_buque")
         .insert([{ id_buque: buque.id, producto }])
         .select()
         .single();
@@ -169,7 +170,7 @@ async function guardarBuque() {
       productosCreados[producto] = idProducto;
     }
 
-    await supabase.from("bls_producto").insert([
+    await supabaseClient.from("bls_producto").insert([
       {
         id_producto_buque: idProducto,
         nit_empresa,
