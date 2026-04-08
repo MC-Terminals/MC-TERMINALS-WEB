@@ -8,7 +8,7 @@ if (!supabaseClient) {
   throw new Error("Supabase no inicializado");
 }
 
-  const LOGO_URL = "https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png";
+  const LOGO_URL = "https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/logo_1.png";
 
   const fmtTon = new Intl.NumberFormat("es-GT",{ minimumFractionDigits:2, maximumFractionDigits:2 });
   const fmtQQ  = new Intl.NumberFormat("es-GT",{ minimumFractionDigits:0, maximumFractionDigits:4 });

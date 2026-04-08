@@ -398,7 +398,7 @@ async function imprimirOrden(no_orden) {
       <body onload="setTimeout(() => window.print(), 500)">
         <div class="header">
           <div><strong>${empresaNombre}</strong></div>
-          <div><img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_empresa.png" class="logo"></div>
+          <div><img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/Logo-MC-Terminals.png" class="logo"></div>
         </div>
         <h2>Orden de Carga</h2>
         <table>
@@ -496,7 +496,7 @@ async function imprimirOrdenMasiva() {
               <tr><td><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-GT')}</td></tr>
             </table>
           </div>
-          <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos//logo_1.png" class="logo" />
+          <img src="https://fpqnzqrdyxmhptosplos.supabase.co/storage/v1/object/public/logos/logo_1.png" class="logo" />
         </div>
 
         <h2>ORDEN DE CARGA (MASIVA)</h2>
